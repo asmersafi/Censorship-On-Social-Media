@@ -1,0 +1,103 @@
+---
+title: "Censorship-on-Social-Media-1"
+author: "Asmer Asrar Safi"
+date: "4/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(fivethirtyeight)
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(patchwork)
+library(purrr)
+library(stringr)
+library(ggthemes)
+library(tibble)
+library(janitor)
+library(skimr)
+library(gt)
+library(forcats)
+library(broom)
+library(fivethirtyeight)
+library(plyr)
+```
+
+
+```{r, load the data, include=FALSE, message=FALSE}
+
+
+# LOADING the relevant removal requests data 
+
+mydata <- ldply(list.files(path="~/Documents/Gov 1005/Censorship-On-Social-Media/Raw-Data/Removal Requests//",pattern="csv",full.names=TRUE),function(filename) {
+    dum=read_csv(filename, locale = locale(encoding = "latin1"))
+    dum$filename=filename
+    return(dum)
+})
+
+mydata <- mydata %>% 
+  clean_names() 
+
+```
+
+```{r, wrangling, echo=FALSE}
+
+# filtering for the relevant countries
+
+wrangledata <- mydata %>% 
+  filter(country %in% c("Pakistan", "India", "Turkey", "Israel", "United States", "Russia"))
+
+
+wrangledata$accounts_specified <- as.numeric(wrangledata$accounts_specified)
+
+wrangledata$time_period <- as.factor(wrangledata$time_period)
+
+wrangledata$time_period <- factor(wrangledata$time_period, levels =
+           c("January - June 2012",
+             "July - December 2012",
+             "January - June 2013",
+             "July - December 2013",
+             "January - June 2014",
+             "July - December 2014",
+             "January - June 2015",
+             "July - December 2015",
+             "January - June 2016",
+             "July - December 2016",
+             "January - June 2017",
+             "July - December 2017",
+             "January - June 2018",
+             "July - December 2018",
+             "January - June 2019"))
+
+wrangledata <- 
+  wrangledata %>% 
+  mutate(accounts_specified = replace_na(accounts_specified, 0))
+
+             
+
+wrangledata %>% 
+select(country,
+       accounts_specified,
+       time_period) %>% 
+ggplot(aes(x = time_period,
+           y = accounts_specified, 
+           color = country)) + 
+  geom_point() +
+  scale_color_stata() +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1)) +
+  labs(x = "Time Period", 
+       y = "Accounts Specified",
+       color = "Country", 
+       title = "Accounts Specified for Content Withdrawal
+from January 2012 to June 2019",
+subtitle = "Data from Twitter Transparency Reports")
+
+
+
+```
+
