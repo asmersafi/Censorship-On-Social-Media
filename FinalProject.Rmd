@@ -17,12 +17,12 @@ library(purrr)
 library(stringr)
 library(ggthemes)
 library(tibble)
+library(gganimate)
 library(janitor)
 library(skimr)
 library(gt)
 library(forcats)
 library(broom)
-library(fivethirtyeight)
 library(plyr)
 ```
 
@@ -40,6 +40,8 @@ mydata <- ldply(list.files(path="~/Documents/Gov 1005/Censorship-On-Social-Media
 
 mydata <- mydata %>% 
   clean_names() 
+
+view(mydata)
 
 ```
 
@@ -74,11 +76,17 @@ wrangledata$time_period <- factor(wrangledata$time_period, levels =
 
 wrangledata <- 
   wrangledata %>% 
-  mutate(accounts_specified = replace_na(accounts_specified, 0))
+  mutate(accounts_specified = replace_na(accounts_specified, 0)) 
+wrangledata
 
-             
+```
 
-wrangledata %>% 
+
+
+
+```{r}
+
+Plot1 <- wrangledata %>% 
 select(country,
        accounts_specified,
        time_period) %>% 
@@ -89,15 +97,93 @@ ggplot(aes(x = time_period,
   scale_color_stata() +
   theme_few() +
   theme(axis.text.x = element_text(angle = 45,
-                                   hjust = 1)) +
+                                   hjust = 1,
+                                   size = 6),
+        axis.text.y = element_text(size = 6)) +
   labs(x = "Time Period", 
        y = "Accounts Specified",
        color = "Country", 
        title = "Accounts Specified for Content Withdrawal
 from January 2012 to June 2019",
-subtitle = "Data from Twitter Transparency Reports")
+subtitle = "Data from Twitter Transparency Reports") +
+ transition_states(
+    time_period,
+    transition_length = 2,
+    state_length = 1
+  ) +
+  shadow_mark() +
+  enter_fade() + 
+  exit_shrink() +
+  ease_aes('sine-in-out')
+
+Plot1
+```
 
 
+```{r}
 
+Plot2 <- wrangledata %>% 
+select(country,
+       accounts_specified,
+       time_period) %>% 
+ggplot(aes(x = time_period,
+           y = accounts_specified, 
+           color = country)) + 
+  geom_point() +
+  scale_color_stata() +
+  theme_few() +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 6),
+        axis.text.y = element_text(size = 6)) +
+  labs(x = "Time Period", 
+       y = "Accounts Specified",
+       color = "Country", 
+       title = "Accounts Specified for Content Withdrawal
+from January 2012 to June 2019",
+subtitle = "Data from Twitter Transparency Reports") +
+ facet_wrap(~country) +
+ transition_states(
+    time_period,
+    transition_length = 2,
+    state_length = 1
+  ) +
+  shadow_mark() +
+  enter_fade() + 
+  exit_shrink() +
+  ease_aes('sine-in-out')
+
+Plot2
+
+```
+
+
+```{r}
+
+wrangledata$percentage_where_some_content_withheld = as.numeric(gsub("[\\%,]", "", wrangledata$percentage_where_some_content_withheld))
+
+wrangledata <- 
+  wrangledata %>% 
+  mutate(percentage_where_some_content_withheld = replace_na(percentage_where_some_content_withheld, 0)) 
+
+Plot3 <- wrangledata %>% 
+  ggplot(aes(time_period, 
+             percentage_where_some_content_withheld,
+             color = country)) +
+  geom_point() + 
+  theme_few() + 
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 6),
+        axis.text.y = element_text(size = 6)) +
+  labs(x = "Time Period", 
+       y = "Percentage of Requests Complied with",
+       color = "Country", 
+       title = "Percentage of Requests Complied with by Twitter
+January 2012 - June 2019",
+subtitle = "Data from Twitter Transparency Reports") +
+  scale_color_stata()
+
+Plot3
 ```
 
