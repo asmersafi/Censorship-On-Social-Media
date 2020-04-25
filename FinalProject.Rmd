@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(fivethirtyeight)
 library(tidyverse)
+library(transformr)
+library(naniar)
 library(dplyr)
 library(readr)
 library(patchwork)
@@ -85,6 +87,8 @@ wrangledata
 
 ```{r}
 
+
+
 Plot1 <- wrangledata %>% 
 select(country,
        accounts_specified,
@@ -93,6 +97,7 @@ ggplot(aes(x = time_period,
            y = accounts_specified, 
            color = country)) + 
   geom_point() +
+  geom_line() +
   scale_color_stata() +
   theme_few() +
   theme(axis.text.x = element_text(angle = 45,
@@ -104,16 +109,7 @@ ggplot(aes(x = time_period,
        color = "Country", 
        title = "Accounts Specified for Content Withdrawal
 from January 2012 to June 2019",
-subtitle = "Data from Twitter Transparency Reports") +
- transition_states(
-    time_period,
-    transition_length = 2,
-    state_length = 1
-  ) +
-  shadow_mark() +
-  enter_fade() + 
-  exit_shrink() +
-  ease_aes('sine-in-out')
+subtitle = "Data from Twitter Transparency Reports") 
 
 Plot1
 ```
@@ -129,6 +125,7 @@ ggplot(aes(x = time_period,
            y = accounts_specified, 
            color = country)) + 
   geom_point() +
+  geom_line(group = 1) +
   scale_color_stata() +
   theme_few() +
   theme(axis.text.x = element_text(angle = 45,
@@ -141,16 +138,7 @@ ggplot(aes(x = time_period,
        title = "Accounts Specified for Content Withdrawal
 from January 2012 to June 2019",
 subtitle = "Data from Twitter Transparency Reports") +
- facet_wrap(~country) +
- transition_states(
-    time_period,
-    transition_length = 2,
-    state_length = 1
-  ) +
-  shadow_mark() +
-  enter_fade() + 
-  exit_shrink() +
-  ease_aes('sine-in-out')
+ facet_wrap(~country) 
 
 Plot2
 
@@ -187,10 +175,11 @@ Plot3
 ```
 
 
-```{r, total tweet requests}
+```{r, total tweet requests all data}
 
 # Retrieving total - create function for columns. 
 
+# Tracks total contents specified over time periods for withdrawal
 
 mydata$accounts_specified <- as.numeric(mydata$accounts_specified)
 
@@ -219,7 +208,7 @@ mydata <-
 
 
 get_total <- function(x){
- wrangledata %>% 
+ mydata %>% 
   filter(time_period == x) %>% 
   summarize(total = sum(accounts_specified)) %>% 
   pull(total)
@@ -291,4 +280,115 @@ caption = "Data from Twitter Transparency Reports") +
 
 Plot4
 ```
+
+
+```{r, total content withheld after request}
+
+# Creating content withheld for each country column by adding tweets_withheld and accounts_withheld 
+
+
+
+mydataforcontentwithheldtotal <- 
+  mydata %>% 
+  mutate(accounts_withheld = replace_na(accounts_withheld, 0)) %>% 
+  mutate(tweets_withheld = replace_na(tweets_withheld, 0)) %>% 
+  select(time_period, country, tweets_withheld, accounts_withheld) %>%  
+  mutate(tweets_withheld = ifelse( tweets_withheld == "-", 
+                                   0, 
+                                   tweets_withheld)) %>% 
+  mutate(accounts_withheld = ifelse(accounts_withheld == "-", 
+                                   0, 
+                                   accounts_withheld)) %>% 
+  mutate(accounts_withheld = str_replace(accounts_withheld, '\\*', '')) %>% 
+  mutate(tweets_withheld = str_replace(accounts_withheld, '\\*', '')) %>% 
+  mutate(accounts_withheld = as.numeric(accounts_withheld)) %>% 
+  mutate(tweets_withheld = as.numeric(tweets_withheld)) %>% 
+  mutate(content_withheld = accounts_withheld + tweets_withheld) 
+                                    
+
+get_total_content_withheld <- function(x){
+ mydataforcontentwithheldtotal %>% 
+  filter(time_period == x) %>% 
+  filter(!country == "TOTAL", !country == "Total") %>% 
+  summarize(total = sum(content_withheld)) %>% 
+  pull(total) 
+}
+
+get_total_content_withheld("January - June 2019")
+
+
+total_content_withheld <- tibble(time_period = c("January - June 2012",
+             "July - December 2012",
+             "January - June 2013",
+             "July - December 2013",
+             "January - June 2014",
+             "July - December 2014",
+             "January - June 2015",
+             "July - December 2015",
+             "January - June 2016",
+             "July - December 2016",
+             "January - June 2017",
+             "July - December 2017",
+             "January - June 2018",
+             "July - December 2018",
+             "January - June 2019"))
+
+total_content_withheld$time_period <- factor(total_content_withheld$time_period, levels =
+           c("January - June 2012",
+             "July - December 2012",
+             "January - June 2013",
+             "July - December 2013",
+             "January - June 2014",
+             "July - December 2014",
+             "January - June 2015",
+             "July - December 2015",
+             "January - June 2016",
+             "July - December 2016",
+             "January - June 2017",
+             "July - December 2017",
+             "January - June 2018",
+             "July - December 2018",
+             "January - June 2019"))
+
+total_content_withheld <- total_content_withheld %>% 
+              mutate(total_content_withheld_TP = map_dbl(time_period, get_total_content_withheld))
+
+
+
+Plot5 <- total_content_withheld %>% 
+  ggplot(aes(time_period, total_content_withheld_TP)) +
+  geom_col(color = "black", fill = "darkred") +
+  scale_color_stata() +
+  theme_few() +
+  labs(x = "Time Period", 
+       y = "Total Content Withheld in Given Time Period", 
+       title = "Total Content Withheld, January 2012 - June 2019",
+caption = "Data from Twitter Transparency Reports") +
+     theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 7),
+        axis.text.y = element_text(size = 7),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 8)) 
+
+Plot5
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
