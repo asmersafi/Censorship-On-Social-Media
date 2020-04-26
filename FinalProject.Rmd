@@ -14,6 +14,7 @@ library(transformr)
 library(naniar)
 library(dplyr)
 library(readr)
+library(markdown)
 library(patchwork)
 library(purrr)
 library(stringr)
@@ -275,10 +276,11 @@ caption = "Data from Twitter Transparency Reports") +
         axis.text.y = element_text(size = 7),
         axis.title.x = element_text(size = 10),
         axis.title.y = element_text(size = 8)) + 
-  theme(legend.position = "none") + 
-  transition_reveal(as.numeric(time_period))
-
+  theme(legend.position = "none") 
 Plot4
+
+ggsave("Plot4.jpg", last_plot())
+
 ```
 
 
@@ -357,12 +359,14 @@ total_content_withheld <- total_content_withheld %>%
 
 Plot5 <- total_content_withheld %>% 
   ggplot(aes(time_period, total_content_withheld_TP)) +
-  geom_col(color = "black", fill = "darkred") +
+  geom_point(color = "darkgreen") +
+  geom_line(color = "darkgreen", group = 1) +
   scale_color_stata() +
   theme_few() +
   labs(x = "Time Period", 
        y = "Total Content Withheld in Given Time Period", 
-       title = "Total Content Withheld, January 2012 - June 2019",
+       title = "Total Content Withheld,
+January 2012 - June 2019",
 caption = "Data from Twitter Transparency Reports") +
      theme(axis.text.x = element_text(angle = 45,
                                    hjust = 1,
@@ -372,6 +376,8 @@ caption = "Data from Twitter Transparency Reports") +
         axis.title.y = element_text(size = 8)) 
 
 Plot5
+
+ggsave("Plot.5.jpg", last_plot())
 ```
 
 
