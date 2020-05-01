@@ -39,13 +39,165 @@ mydata <- ldply(list.files(path="~/Documents/Gov 1005/Censorship-On-Social-Media
     dum$filename=filename
     return(dum)
 })
+
+
+
 mydata <- mydata %>% 
-  clean_names() 
+  clean_names() %>% 
+  select(-flags, -links, -report_links, -filename, -iso_code, -removal_requests_govt_agency_police_other) %>% 
+  mutate(accounts_withheld = ifelse(accounts_withheld == "-", 
+                                   0, 
+                                   accounts_withheld), 
+         
+         removal_requests_court_orders = ifelse(removal_requests_court_orders == "-", 
+                                   0, 
+                                   removal_requests_court_orders), 
+         
+         removal_requests_go_va_t_agency_police_other = ifelse(removal_requests_go_va_t_agency_police_other == "-", 0, removal_requests_go_va_t_agency_police_other), 
+         
+         percentage_where_some_content_withheld = ifelse(percentage_where_some_content_withheld == "-", 0, percentage_where_some_content_withheld),
+         
+         accounts_specified = ifelse(accounts_specified == "-", 
+                                   0, 
+                                   accounts_specified), 
+         
+         accounts_withheld =  replace_na(accounts_withheld, 0),
+         
+         tweets_withheld = replace_na(tweets_withheld, 0),
+  
+         tweets_withheld = ifelse(tweets_withheld == "-", 
+                                   0, 
+                                   tweets_withheld),
 
-view(mydata)
+         accounts_withheld = ifelse(accounts_withheld == "-", 
+                                   0, 
+                                   accounts_withheld))
 
+
+mydata <- mydata %>% 
+  
+  mutate(tweets_withheld = ifelse(tweets_withheld == "-", 0, tweets_withheld)) %>%
+  
+  mutate(accounts_tos = ifelse(accounts_tos == "-", 0, accounts_tos)) %>% 
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = ifelse(removal_requests_go_vao_t_agency_police_other == "-", 0, removal_requests_go_vao_t_agency_police_other)) %>% 
+  
+  mutate(accounts_no_action = ifelse(accounts_no_action == "-", 0, accounts_no_action)) %>% 
+  
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = ifelse(removal_requests_go_vi_t_agency_police_other == "-", 0, removal_requests_go_vi_t_agency_police_other)) %>% 
+  
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = replace_na(removal_requests_go_vao_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_go_va_t_agency_police_other = replace_na(removal_requests_go_va_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = replace_na(removal_requests_go_vi_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = replace_na(removal_requests_government_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_court_orders = replace_na(removal_requests_court_orders, 0)) %>% 
+   
+  mutate(accounts_specified = replace_na(accounts_specified, 0)) %>% 
+  
+  mutate(accounts_withheld = replace_na(accounts_withheld, 0)) %>% 
+  
+  mutate(accounts_no_action = replace_na(accounts_no_action, 0)) %>% 
+  
+  mutate(tweets_withheld = replace_na(tweets_withheld, 0)) %>% 
+  
+  mutate(accounts_tos = replace_na(accounts_tos, 0)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = ifelse(removal_requests_government_agency_police_other == "-", 0, removal_requests_government_agency_police_other)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\*", " ")) %>% 
+  
+  mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\%","")) %>% 
+
+  mutate(tweets_withheld = str_replace(tweets_withheld, "\\*", " ")) %>% 
+
+  mutate(accounts_withheld = str_replace(accounts_withheld, "\\*", " ")) %>% 
+    
+  mutate(accounts_specified = str_replace(accounts_specified, "\\*", " ")) %>% 
+
+  mutate(accounts_specified = gsub(",", "", accounts_specified)) %>% 
+  
+  mutate(accounts_withheld = gsub(",", "", accounts_withheld)) %>%
+  
+  mutate(tweets_withheld = gsub(",", "", tweets_withheld)) %>%
+  
+  mutate(removal_requests_court_orders = gsub(",", "", removal_requests_court_orders)) %>%
+  
+  mutate(removal_requests_go_va_t_agency_police_other = gsub(",", "", removal_requests_go_va_t_agency_police_other)) %>%
+  
+  mutate(percentage_where_some_content_withheld = gsub(",", "", percentage_where_some_content_withheld)) %>%
+  
+  mutate(accounts_tos = gsub(",", "", accounts_tos)) %>%
+  
+  mutate(accounts_no_action = gsub(",", "", accounts_no_action)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = gsub(",", "", removal_requests_government_agency_police_other)) %>%
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = gsub(",", "", removal_requests_go_vi_t_agency_police_other)) %>% 
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = gsub(",", "", removal_requests_go_vao_t_agency_police_other)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = replace_na(percentage_where_some_content_withheld, 0)) %>% 
+ 
+  mutate(time_period = factor(time_period, levels =
+           c("January - June 2012",
+             
+             "July - December 2012",
+             
+             "January - June 2013",
+             
+             "July - December 2013",
+             
+             "January - June 2014",
+             
+             "July - December 2014",
+             
+             "January - June 2015",
+             
+             "July - December 2015",
+             
+             "January - June 2016",
+             
+             "July - December 2016",
+             
+             "January - June 2017",
+             
+             "July - December 2017",
+             
+             "January - June 2018",
+             
+             "July - December 2018",
+             
+             "January - June 2019")))
+  
+  
+
+
+# view(mydata)
+
+  
+  # mutate(percentage_where_some_content_withheld = as.numeric(gsub("[\\%,]", "", percentage_where_some_content_withheld)))
+  # 
 
 ```
+
+
+```{r}
+
+p <- mydata %>% 
+mutate(percentage_where_some_content_withheld = as.numeric(percentage_where_some_content_withheld)) %>% 
+ggplot(aes(time_period, percentage_where_some_content_withheld, color = country)) +
+         geom_point()
+
+p
+```
+
+
 
 
 ```{r, wrangling, echo=FALSE}
