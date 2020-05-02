@@ -1,0 +1,284 @@
+---
+title: "Cleaned_work"
+author: "Asmer Asrar Safi"
+date: "5/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(ggplot2)
+library(fivethirtyeight)
+library(tidyverse)
+library(transformr)
+library(naniar)
+library(dplyr)
+library(readr)
+library(markdown)
+library(patchwork)
+library(purrr)
+library(stringr)
+library(ggthemes)
+library(tibble)
+library(gganimate)
+library(janitor)
+library(skimr)
+library(gt)
+library(forcats)
+library(jsonlite)
+library(broom)
+library(plyr)
+```
+
+
+```{r}
+mydata <- ldply(list.files(path="~/Documents/Gov 1005/Censorship-On-Social-Media/Raw-Data/Removal Requests//",pattern="csv",full.names=TRUE),function(filename) {
+    dum=read_csv(filename, locale = locale(encoding = "latin1"))
+    dum$filename=filename
+    return(dum)
+})
+
+
+
+mydata <- mydata %>% 
+  
+  clean_names() %>% 
+  
+  select(-flags, -links, -report_links, -filename, -iso_code, -removal_requests_govt_agency_police_other) %>% 
+  
+  mutate(accounts_withheld = ifelse(accounts_withheld == "-", 
+                                   0, 
+                                   accounts_withheld), 
+         
+         removal_requests_court_orders = ifelse(removal_requests_court_orders == "-", 
+                                   0, 
+                                   removal_requests_court_orders), 
+         
+         removal_requests_go_va_t_agency_police_other = ifelse(removal_requests_go_va_t_agency_police_other == "-", 0, removal_requests_go_va_t_agency_police_other), 
+         
+         percentage_where_some_content_withheld = ifelse(percentage_where_some_content_withheld == "-", 0, percentage_where_some_content_withheld),
+         
+         accounts_specified = ifelse(accounts_specified == "-", 
+                                   0, 
+                                   accounts_specified), 
+         
+         accounts_withheld =  replace_na(accounts_withheld, 0),
+         
+         tweets_withheld = replace_na(tweets_withheld, 0),
+  
+         tweets_withheld = ifelse(tweets_withheld == "-", 
+                                   0, 
+                                   tweets_withheld),
+
+         accounts_withheld = ifelse(accounts_withheld == "-", 
+                                   0, 
+                                   accounts_withheld))
+
+
+mydata <- mydata %>% 
+  
+  mutate(tweets_withheld = ifelse(tweets_withheld == "-", 0, tweets_withheld)) %>%
+  
+  mutate(accounts_tos = ifelse(accounts_tos == "-", 0, accounts_tos)) %>% 
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = ifelse(removal_requests_go_vao_t_agency_police_other == "-", 0, removal_requests_go_vao_t_agency_police_other)) %>% 
+  
+  mutate(accounts_no_action = ifelse(accounts_no_action == "-", 0, accounts_no_action)) %>% 
+  
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = ifelse(removal_requests_go_vi_t_agency_police_other == "-", 0, removal_requests_go_vi_t_agency_police_other)) %>% 
+  
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = replace_na(removal_requests_go_vao_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_go_va_t_agency_police_other = replace_na(removal_requests_go_va_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = replace_na(removal_requests_go_vi_t_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = replace_na(removal_requests_government_agency_police_other, 0)) %>% 
+  
+  mutate(removal_requests_court_orders = replace_na(removal_requests_court_orders, 0)) %>% 
+   
+  mutate(accounts_specified = replace_na(accounts_specified, 0)) %>% 
+  
+  mutate(accounts_withheld = replace_na(accounts_withheld, 0)) %>% 
+  
+  mutate(accounts_no_action = replace_na(accounts_no_action, 0)) %>% 
+  
+  mutate(tweets_withheld = replace_na(tweets_withheld, 0)) %>% 
+  
+  mutate(accounts_tos = replace_na(accounts_tos, 0)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = ifelse(removal_requests_government_agency_police_other == "-", 0, removal_requests_government_agency_police_other)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\*", " ")) %>% 
+  
+  mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\%","")) %>% 
+
+  mutate(tweets_withheld = str_replace(tweets_withheld, "\\*", " ")) %>% 
+
+  mutate(accounts_withheld = str_replace(accounts_withheld, "\\*", " ")) %>% 
+    
+  mutate(accounts_specified = str_replace(accounts_specified, "\\*", " ")) %>% 
+
+  mutate(accounts_specified = gsub(",", "", accounts_specified)) %>% 
+  
+  mutate(accounts_withheld = gsub(",", "", accounts_withheld)) %>%
+  
+  mutate(tweets_withheld = gsub(",", "", tweets_withheld)) %>%
+  
+  mutate(removal_requests_court_orders = gsub(",", "", removal_requests_court_orders)) %>%
+  
+  mutate(removal_requests_go_va_t_agency_police_other = gsub(",", "", removal_requests_go_va_t_agency_police_other)) %>%
+  
+  mutate(percentage_where_some_content_withheld = gsub(",", "", percentage_where_some_content_withheld)) %>%
+  
+  mutate(accounts_tos = gsub(",", "", accounts_tos)) %>%
+  
+  mutate(accounts_no_action = gsub(",", "", accounts_no_action)) %>% 
+  
+  mutate(removal_requests_government_agency_police_other = gsub(",", "", removal_requests_government_agency_police_other)) %>%
+  
+  mutate(removal_requests_go_vi_t_agency_police_other = gsub(",", "", removal_requests_go_vi_t_agency_police_other)) %>% 
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = gsub(",", "", removal_requests_go_vao_t_agency_police_other)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = replace_na(percentage_where_some_content_withheld, 0)) %>% 
+ 
+  mutate(time_period = factor(time_period, levels =
+           c("January - June 2012",
+             
+             "July - December 2012",
+             
+             "January - June 2013",
+             
+             "July - December 2013",
+             
+             "January - June 2014",
+             
+             "July - December 2014",
+             
+             "January - June 2015",
+             
+             "July - December 2015",
+             
+             "January - June 2016",
+             
+             "July - December 2016",
+             
+             "January - June 2017",
+             
+             "July - December 2017",
+             
+             "January - June 2018",
+             
+             "July - December 2018",
+             
+             "January - June 2019")))
+  
+mydata
+
+```
+
+
+```{r}
+GDP_data <- read_csv("API_NY.GDP.MKTP.CD_DS2_en_csv_v2_988718.csv") %>% 
+  
+  clean_names() %>% 
+  
+  select(country_name, x2012, x2013, x2014, x2015, x2016, x2017, x2018)  %>% 
+  
+  pivot_longer(names_to = "year", 
+               
+               values_to = "GDP", 
+               
+               cols = -country_name, 
+                
+               names_prefix = "x") %>% 
+  
+  dplyr::rename("country" = country_name) 
+ 
+
+
+view(GDP_data)
+
+``` 
+
+
+
+```{r}
+
+
+formodel <- mydata %>% 
+  
+  mutate(time_period = as.character(time_period)) %>% 
+  
+  mutate(time_period = str_replace(time_period, "January - June 2012", "2012")) %>% 
+  
+  mutate(time_period = str_replace(time_period, "July - December 2012", "2012")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2013", "2013")) %>% 
+
+  mutate(time_period = str_replace(time_period, "July - December 2013", "2013")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2014", "2014")) %>% 
+ 
+  mutate(time_period = str_replace(time_period, "July - December 2014", "2014")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2015", "2015")) %>% 
+
+  mutate(time_period = str_replace(time_period, "July - December 2015", "2015")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2016", "2016")) %>% 
+
+  mutate(time_period = str_replace(time_period, "July - December 2016", "2016")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2017", "2017")) %>% 
+
+  mutate(time_period = str_replace(time_period, "July - December 2017", "2017")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2018", "2018")) %>% 
+
+  mutate(time_period = str_replace(time_period, "July - December 2018", "2018")) %>% 
+
+  mutate(time_period = str_replace(time_period, "January - June 2019", "2019")) %>% 
+  
+  dplyr::rename("year" = time_period) 
+
+View(formodel)
+``` 
+
+
+```{r, join formodel and GDP_data}
+
+join_for_model <- formodel %>% 
+     
+   left_join(GDP_data, 
+             
+             by = c("year", "country")) %>% 
+  
+   dplyr::rename("gdp" = GDP) %>% 
+  
+   filter(gdp %in% NA) %>% 
+  
+   select(country, year, gdp)
+
+join_for_model
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
