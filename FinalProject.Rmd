@@ -178,11 +178,7 @@ mydata <- mydata %>%
   
 
 
-# view(mydata)
 
-  
-  # mutate(percentage_where_some_content_withheld = as.numeric(gsub("[\\%,]", "", percentage_where_some_content_withheld)))
-  # 
 
 ```
 
@@ -191,8 +187,14 @@ mydata <- mydata %>%
 
 p <- mydata %>% 
 mutate(percentage_where_some_content_withheld = as.numeric(percentage_where_some_content_withheld)) %>% 
+group_by(country) %>% 
 ggplot(aes(time_period, percentage_where_some_content_withheld, color = country)) +
-         geom_point()
+         geom_point() +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 6),
+        axis.text.y = element_text(size = 6))
 
 p
 ```

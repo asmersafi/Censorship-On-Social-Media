@@ -198,7 +198,24 @@ GDP_data <- read_csv("API_NY.GDP.MKTP.CD_DS2_en_csv_v2_988718.csv") %>%
                 
                names_prefix = "x") %>% 
   
-  dplyr::rename("country" = country_name) 
+  dplyr::rename("country" = country_name) %>% 
+  
+  mutate(country = str_replace(country, "Korea, Rep.", "South Korea")) %>% 
+ 
+  mutate(country = str_replace(country, "Hong Kong SAR, China", "Hong Kong")) %>% 
+  
+  mutate(country = str_replace(country, "Venezuela, RB", "Venezuela")) %>% 
+  
+  mutate(country = str_replace(country, "Egypt, Arab Rep.", "Egypt")) %>% 
+  
+  mutate(country = str_replace(country, "Kyrgyz Republic", "Kyrgyzstan")) %>% 
+  
+  mutate(country = str_replace(country, "North Macedonia", "Macedonia")) %>% 
+  
+  mutate(country = str_replace(country, "Croatia", "Croatia")) %>% 
+  
+  mutate(country = str_replace(country, "Venezuela", "Venezuela"))
+  
  
 
 
@@ -215,43 +232,69 @@ formodel <- mydata %>%
   
   mutate(time_period = as.character(time_period)) %>% 
   
-  mutate(time_period = str_replace(time_period, "January - June 2012", "2012")) %>% 
+  mutate(time_period = str_replace(time_period, "January - June 2012", "2012")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2012", "2012")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2013", "2013")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2013", "2013")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2014", "2014")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2014", "2014")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2015", "2015")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2015", "2015")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2016", "2016")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2016", "2016")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2017", "2017")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2017", "2017")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2018", "2018")) %>%
+
+  mutate(time_period = str_replace(time_period, "July - December 2018", "2018")) %>%
+
+  mutate(time_period = str_replace(time_period, "January - June 2019", "2019")) %>%
+
+  mutate(accounts_withheld = as.numeric(accounts_withheld)) %>% 
   
-  mutate(time_period = str_replace(time_period, "July - December 2012", "2012")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2013", "2013")) %>% 
-
-  mutate(time_period = str_replace(time_period, "July - December 2013", "2013")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2014", "2014")) %>% 
- 
-  mutate(time_period = str_replace(time_period, "July - December 2014", "2014")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2015", "2015")) %>% 
-
-  mutate(time_period = str_replace(time_period, "July - December 2015", "2015")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2016", "2016")) %>% 
-
-  mutate(time_period = str_replace(time_period, "July - December 2016", "2016")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2017", "2017")) %>% 
-
-  mutate(time_period = str_replace(time_period, "July - December 2017", "2017")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2018", "2018")) %>% 
-
-  mutate(time_period = str_replace(time_period, "July - December 2018", "2018")) %>% 
-
-  mutate(time_period = str_replace(time_period, "January - June 2019", "2019")) %>% 
+  mutate(tweets_withheld = as.numeric(tweets_withheld)) %>% 
   
-  dplyr::rename("year" = time_period) 
+  mutate(total_withholding_accounts_and_tweets = accounts_withheld + tweets_withheld) %>% 
+  
+  mutate(accounts_specified = as.numeric(accounts_withheld)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = as.numeric(percentage_where_some_content_withheld)) %>% 
 
-View(formodel)
+  dplyr::rename("year" = time_period) %>% 
+  
+  mutate(country = str_replace(country, "Czech Republuc", "Czech Republic")) %>% 
+  
+  mutate(country = str_replace(country, "Russia", "Russian Federation")) %>% 
+  
+  mutate(country = str_replace(country, "Luxemburg", "Luxembourg")) %>% 
+  
+  mutate(country = str_replace(country, "Tunisla", "Tunisia")) %>% 
+  
+  mutate(country = str_replace(country, "Crotia", "Croatia")) %>% 
+  
+  mutate(country = str_replace(country, "Venezuela", "Venezuela"))
+
+
+  
+
+glimpse(formodel)
 ``` 
 
 
 ```{r, join formodel and GDP_data}
+
 
 join_for_model <- formodel %>% 
      
@@ -259,23 +302,13 @@ join_for_model <- formodel %>%
              
              by = c("year", "country")) %>% 
   
-   dplyr::rename("gdp" = GDP) %>% 
+   dplyr::rename("gdp" = GDP)
   
-   filter(gdp %in% NA) %>% 
-  
-   select(country, year, gdp)
-
-join_for_model
+   
 
 
-
+View(join_for_model)
 ```
-
-
-
-
-
-
 
 
 
