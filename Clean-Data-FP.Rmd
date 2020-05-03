@@ -13,6 +13,7 @@ library(ggplot2)
 library(fivethirtyeight)
 library(tidyverse)
 library(transformr)
+library(readxl)
 library(naniar)
 library(dplyr)
 library(readr)
@@ -200,6 +201,8 @@ mydata <- mydata %>%
 ```
 
 
+
+
 ```{r, include=FALSE}
 GDP_data <- read_csv("API_NY.GDP.MKTP.CD_DS2_en_csv_v2_988718.csv") %>% 
   
@@ -342,8 +345,74 @@ formodel <- mydata %>%
 view(formodel)
 ``` 
 
+```{r}
 
-```{r, join formodel and GDP_data, include=FALSE}
+mydata1 <- mydata %>% 
+  
+  # Changing from character to numeric class
+  
+  mutate(accounts_withheld = as.numeric(accounts_withheld)) %>% 
+  
+  mutate(tweets_withheld = as.numeric(tweets_withheld)) %>% 
+  
+  mutate(total_withholding_accounts_and_tweets = accounts_withheld + tweets_withheld) %>% 
+  
+  mutate(accounts_specified = as.numeric(accounts_withheld)) %>% 
+  
+  mutate(percentage_where_some_content_withheld = as.numeric(percentage_where_some_content_withheld)) %>% 
+
+  dplyr::rename("year" = time_period) %>% 
+  
+  # Making country names alike for joining the data sets
+  
+  mutate(country = str_replace(country, "Czech Republuc", "Czech Republic")) %>% 
+  
+  mutate(country = str_replace(country, "Russia", "Russian Federation")) %>% 
+  
+  mutate(country = str_replace(country, "Luxemburg", "Luxembourg")) %>% 
+  
+  mutate(country = str_replace(country, "Tunisla", "Tunisia")) %>% 
+  
+  mutate(country = str_replace(country, "Crotia", "Croatia")) %>% 
+  
+  mutate(country = str_replace(country, "Venezuela", "Venezuela")) %>% 
+  
+  # Changing from character to numeric variables
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = as.numeric(removal_requests_go_vao_t_agency_police_other), 
+         
+         removal_requests_go_va_t_agency_police_other = as.numeric(removal_requests_go_va_t_agency_police_other), 
+         
+         removal_requests_court_orders = as.numeric(removal_requests_court_orders), 
+         
+         removal_requests_government_agency_police_other = as.numeric(removal_requests_government_agency_police_other), 
+         
+         removal_requests_go_vi_t_agency_police_other = as.numeric(removal_requests_go_vi_t_agency_police_other),
+         
+         accounts_tos = as.numeric(accounts_tos), 
+         
+         accounts_no_action = as.numeric(accounts_tos), 
+         
+         # Creating total_requests_made variable
+         
+         total_requests_made = removal_requests_court_orders + removal_requests_go_va_t_agency_police_other + removal_requests_go_vao_t_agency_police_other + removal_requests_go_vi_t_agency_police_other + removal_requests_government_agency_police_other) %>% 
+  
+         select(-removal_requests_court_orders, -removal_requests_go_va_t_agency_police_other,  -removal_requests_go_vao_t_agency_police_other, -removal_requests_go_vi_t_agency_police_other,  -removal_requests_government_agency_police_other) %>% 
+  
+  mutate(country = str_remove(country, "TOTAL"), 
+           
+          country = str_remove(country, "Total")) %>% 
+  
+  filter(!is.na(year)) 
+  
+  
+
+
+  mydata1
+
+```
+
+```{r, join for model and GDP_data, include=FALSE}
 
 
 # joining the data to create model between GDP and content withheld
@@ -376,8 +445,65 @@ join_for_model <- formodel %>%
 
 join_for_model
 
+
+
+
 ```
 
+
+#### histogram depicting Country Requests for Content Withdrawal against Percentage where some content was withheld
+```{r,echo=FALSE, warning=FALSE}
+
+# histogram depicting Country Requests for Content Withdrawal 
+# against Percentage where some content was withheld
+
+
+hist_join_for_model <- join_for_model %>% 
+  
+  ggplot(aes(percentage_where_some_content_withheld)) +
+  
+  scale_y_log10() +
+  
+  geom_histogram(bins = 60, fill = "darkred", color = "white") +
+  
+  theme_minimal() +
+  
+  labs(y = "Country Requests for Content Withdrawal", 
+       
+       x = "Percentage of Requests Where Some Content was Withheld (%)")
+  
+  
+
+hist_join_for_model 
+
+
+# for all years -- this plot shows the percentage of content withheld in all
+# years. 
+
+boxplotforyear <- mydata1 %>% 
+  
+  ggplot(aes(year, percentage_where_some_content_withheld)) +
+  
+  geom_boxplot() +
+  
+  theme_minimal() +
+  
+  labs(y = "Percentage of Requests Where 
+Some Content was Withheld", 
+       
+       x = "Time Period") +
+  
+   theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 6))
+
+boxplotforyear
+
+```
+
+
+
+#### Percentage Withheld against GDP
 
 ```{r, warning=FALSE, echo=FALSE}
 model_1_perc_gdp <- join_for_model %>%
@@ -392,7 +518,7 @@ model_1_perc_gdp <- join_for_model %>%
 
    scale_x_log10() +
 
-   theme_minimal() +
+   theme_classic() +
   
    labs(y = "Percentage of Requests by a 
       Country Where Some Content Withheld",
@@ -429,6 +555,7 @@ model_1
 
 ```
 
+#### Percentage Withheld against GDP = By Year
 
 ```{r, warning=FALSE, echo=FALSE}
 
@@ -444,7 +571,7 @@ model_2_year_perc_gdp <- join_for_model %>%
 
    scale_x_log10() +
 
-   theme_minimal() +
+   theme_classic() +
   
    labs(y = "Percentage of Requests by a 
       Country Where Some Content Withheld",
@@ -455,7 +582,134 @@ model_2_year_perc_gdp <- join_for_model %>%
 
 model_2_year_perc_gdp
 
-
-
-
 ``` 
+
+
+#### Choose country and see relationship 
+
+##### Amount of plots vary by when and in which year the country made requests
+
+```{r, warning=FALSE, echo=FALSE}
+
+model_3_country_perc_gdp <- function(x){
+  
+  join_for_model %>%
+  
+   filter(country == x) %>% 
+
+   ggplot(aes(gdp, percentage_where_some_content_withheld)) +
+
+   geom_point() + 
+  
+   geom_jitter(position = "dodge") +
+
+   geom_smooth(aes(gdp, percentage_where_some_content_withheld), method = "lm", se = TRUE) +
+
+   theme_classic() +
+  
+   labs(title = print(x),
+   
+       y = "Percentage of Requests by the 
+      Country Where Some Content was Withheld",
+        
+        x = "Country GDP (2019 Dollars)") 
+}
+
+
+model_3_country_perc_gdp("India")
+```
+
+```{r, load freedom index data}
+
+freedom_index_data <- read_excel("2020_All_Data_FIW_2013-2020.xlsx", skip = 1) %>% 
+  
+  clean_names() %>% 
+
+  select(country_territory, region, edition, total) %>% 
+  
+  dplyr::rename("year" = edition) %>% 
+  
+  dplyr::rename("country" = country_territory) %>% 
+  
+  dplyr::rename("freedom_score" = total) %>% 
+  
+  mutate(country = str_replace(country, "Russia", "Russian Federation")) 
+ 
+
+freedom_index_data
+```
+
+```{r}
+
+# Rejoining the GDP and for_model data for the purposes of this second regression
+# Since there is data available for 2019 here
+
+
+join_for_model_2 <- formodel %>% 
+     
+   left_join(GDP_data, 
+             
+             by = c("year", "country")) %>% 
+  
+   dplyr::rename("gdp" = GDP) %>% 
+  
+   # Removing years that are NA (corresponding to Total rows)
+  
+   filter(!is.na(year)) %>% 
+  
+   # Removing Total rows
+
+   filter(!country %in% c("Total", "TOTAL"))
+
+
+
+ # freedom data for 2012 not available
+
+ join_for_model_2 <- join_for_model_2 %>%
+
+   mutate(year = as.numeric(year))
+
+
+ join_freedom_twitter <- join_for_model_2 %>%
+
+  left_join(freedom_index_data,
+
+             by = c("year", "country")) %>%
+   
+  filter(!year %in% "2012") %>% 
+   
+  filter(!is.na(freedom_score))
+
+
+
+
+glimpse(join_freedom_twitter)
+
+```
+
+
+```{r}
+
+corr2 <- join_freedom_twitter %>%
+  
+  summarize(correlation = cor(percentage_where_some_content_withheld, freedom_score))
+
+corr2
+
+
+ggplot(join_freedom_twitter, aes(freedom_score, accounts_specified)) + 
+  
+  geom_point() +
+  
+  geom_jitter() +
+  
+  geom_smooth(aes(freedom_score, accounts_specified), method = "lm")
+
+
+
+```
+
+
+
+
+
