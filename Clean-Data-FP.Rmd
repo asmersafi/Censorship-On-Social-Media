@@ -33,13 +33,17 @@ library(plyr)
 ```
 
 
-```{r}
+```{r,include=FALSE}
 mydata <- ldply(list.files(path="~/Documents/Gov 1005/Censorship-On-Social-Media/Raw-Data/Removal Requests//",pattern="csv",full.names=TRUE),function(filename) {
     dum=read_csv(filename, locale = locale(encoding = "latin1"))
     dum$filename=filename
     return(dum)
 })
 
+# Loaded Data
+
+
+# Cleaning Data 
 
 
 mydata <- mydata %>% 
@@ -47,6 +51,8 @@ mydata <- mydata %>%
   clean_names() %>% 
   
   select(-flags, -links, -report_links, -filename, -iso_code, -removal_requests_govt_agency_police_other) %>% 
+  
+  # Filtering and removing for extraneous variables, that are not necessary
   
   mutate(accounts_withheld = ifelse(accounts_withheld == "-", 
                                    0, 
@@ -90,6 +96,7 @@ mydata <- mydata %>%
   
   mutate(removal_requests_go_vi_t_agency_police_other = ifelse(removal_requests_go_vi_t_agency_police_other == "-", 0, removal_requests_go_vi_t_agency_police_other)) %>% 
   
+  # Replacing NAs with 0 
   
   mutate(removal_requests_go_vao_t_agency_police_other = replace_na(removal_requests_go_vao_t_agency_police_other, 0)) %>% 
   
@@ -113,6 +120,8 @@ mydata <- mydata %>%
   
   mutate(removal_requests_government_agency_police_other = ifelse(removal_requests_government_agency_police_other == "-", 0, removal_requests_government_agency_police_other)) %>% 
   
+  # Removing asterisks
+  
   mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\*", " ")) %>% 
   
   mutate(percentage_where_some_content_withheld = str_replace(percentage_where_some_content_withheld, "\\%","")) %>% 
@@ -123,6 +132,8 @@ mydata <- mydata %>%
     
   mutate(accounts_specified = str_replace(accounts_specified, "\\*", " ")) %>% 
 
+  # Removing commas between numbers
+  
   mutate(accounts_specified = gsub(",", "", accounts_specified)) %>% 
   
   mutate(accounts_withheld = gsub(",", "", accounts_withheld)) %>%
@@ -147,6 +158,8 @@ mydata <- mydata %>%
   
   mutate(percentage_where_some_content_withheld = replace_na(percentage_where_some_content_withheld, 0)) %>% 
  
+  # Releveling the factors in time_period variable
+  
   mutate(time_period = factor(time_period, levels =
            c("January - June 2012",
              
@@ -176,19 +189,27 @@ mydata <- mydata %>%
              
              "July - December 2018",
              
-             "January - June 2019")))
+             "January - June 2019"))) %>% 
   
-mydata
+  # Removing paranthetical variables
+  
+  mutate(tweets_withheld = gsub("\\s*\\([^\\)]+\\)\\s*$","",as.character(tweets_withheld)))
+
+
 
 ```
 
 
-```{r}
+```{r, include=FALSE}
 GDP_data <- read_csv("API_NY.GDP.MKTP.CD_DS2_en_csv_v2_988718.csv") %>% 
+  
+  # Reading GDP Data 
   
   clean_names() %>% 
   
   select(country_name, x2012, x2013, x2014, x2015, x2016, x2017, x2018)  %>% 
+  
+  # Pivoting to tidy format
   
   pivot_longer(names_to = "year", 
                
@@ -199,6 +220,8 @@ GDP_data <- read_csv("API_NY.GDP.MKTP.CD_DS2_en_csv_v2_988718.csv") %>%
                names_prefix = "x") %>% 
   
   dplyr::rename("country" = country_name) %>% 
+  
+  # Making country names similar to the mydata dataset
   
   mutate(country = str_replace(country, "Korea, Rep.", "South Korea")) %>% 
  
@@ -225,8 +248,10 @@ view(GDP_data)
 
 
 
-```{r}
+```{r, include=FALSE}
 
+
+# Changing Halves to years.
 
 formodel <- mydata %>% 
   
@@ -262,6 +287,8 @@ formodel <- mydata %>%
 
   mutate(time_period = str_replace(time_period, "January - June 2019", "2019")) %>%
 
+  # Changing from character to numeric class
+  
   mutate(accounts_withheld = as.numeric(accounts_withheld)) %>% 
   
   mutate(tweets_withheld = as.numeric(tweets_withheld)) %>% 
@@ -274,6 +301,8 @@ formodel <- mydata %>%
 
   dplyr::rename("year" = time_period) %>% 
   
+  # Making country names alike for joining the data sets
+  
   mutate(country = str_replace(country, "Czech Republuc", "Czech Republic")) %>% 
   
   mutate(country = str_replace(country, "Russia", "Russian Federation")) %>% 
@@ -284,17 +313,42 @@ formodel <- mydata %>%
   
   mutate(country = str_replace(country, "Crotia", "Croatia")) %>% 
   
-  mutate(country = str_replace(country, "Venezuela", "Venezuela"))
+  mutate(country = str_replace(country, "Venezuela", "Venezuela")) %>% 
+  
+  # Changing from character to numeric variables
+  
+  mutate(removal_requests_go_vao_t_agency_police_other = as.numeric(removal_requests_go_vao_t_agency_police_other), 
+         
+         removal_requests_go_va_t_agency_police_other = as.numeric(removal_requests_go_va_t_agency_police_other), 
+         
+         removal_requests_court_orders = as.numeric(removal_requests_court_orders), 
+         
+         removal_requests_government_agency_police_other = as.numeric(removal_requests_government_agency_police_other), 
+         
+         removal_requests_go_vi_t_agency_police_other = as.numeric(removal_requests_go_vi_t_agency_police_other),
+         
+         accounts_tos = as.numeric(accounts_tos), 
+         
+         accounts_no_action = as.numeric(accounts_tos), 
+         
+         # Creating total_requests_made variable
+         
+         total_requests_made = removal_requests_court_orders + removal_requests_go_va_t_agency_police_other + removal_requests_go_vao_t_agency_police_other + removal_requests_go_vi_t_agency_police_other + removal_requests_government_agency_police_other) %>% 
+  
+         select(-removal_requests_court_orders, -removal_requests_go_va_t_agency_police_other,  -removal_requests_go_vao_t_agency_police_other, -removal_requests_go_vi_t_agency_police_other,  -removal_requests_government_agency_police_other)
 
 
   
-
-glimpse(formodel)
+view(formodel)
 ``` 
 
 
-```{r, join formodel and GDP_data}
+```{r, join formodel and GDP_data, include=FALSE}
 
+
+# joining the data to create model between GDP and content withheld
+
+# GDP only available till 2018
 
 join_for_model <- formodel %>% 
      
@@ -302,16 +356,106 @@ join_for_model <- formodel %>%
              
              by = c("year", "country")) %>% 
   
-   dplyr::rename("gdp" = GDP)
+   dplyr::rename("gdp" = GDP) %>% 
   
+   # Removing years that are NA (corresponding to Total rows)
+  
+   filter(!is.na(year)) %>% 
+  
+   # Removing Total rows
+  
+   mutate(country = str_remove(country, "TOTAL"), 
+           
+          country = str_remove(country, "Total")) %>% 
+  
+   # mutate(gdp =  replace_na(gdp, 0)) %>% 
    
+   filter(!year == "2019")
+  
+  
 
+join_for_model
 
-View(join_for_model)
 ```
 
 
+```{r, warning=FALSE, echo=FALSE}
+model_1_perc_gdp <- join_for_model %>%
+
+   ggplot(aes(gdp, percentage_where_some_content_withheld)) +
+
+   geom_point() + 
+  
+   geom_jitter(position = "dodge") +
+
+   geom_smooth(aes(gdp, percentage_where_some_content_withheld), method = "lm", se = TRUE) +
+
+   scale_x_log10() +
+
+   theme_minimal() +
+  
+   labs(y = "Percentage of Requests by a 
+      Country Where Some Content Withheld",
+        
+        x = "Country GDP (2019 Dollars)")
+
+model_1_perc_gdp
+
+
+model_1 <- lm(percentage_where_some_content_withheld ~ gdp, data = join_for_model) %>% 
+  
+  tidy(conf.int = TRUE) %>% 
+  
+  select(term, estimate, conf.low, conf.high) %>% 
+  
+  mutate(term = str_replace(term, "gdp", "GDP")) %>% 
+  
+  gt() %>% 
+  
+  cols_label(term = "Term", 
+             
+             estimate = "Estimate",
+             
+             conf.low = "Lower Bound",
+             
+             conf.high = "Upper Bound") %>% 
+  
+  tab_header(title = "Effect of Country GDP on Percentage of Content Twitter Withholds", 
+             subtitle = "Higher GDP suggests more content wittheld")
+
+
+
+model_1
+
+```
+
+
+```{r, warning=FALSE, echo=FALSE}
+
+model_2_year_perc_gdp <- join_for_model %>%
+
+   ggplot(aes(gdp, percentage_where_some_content_withheld)) +
+
+   geom_point() + 
+  
+   geom_jitter(position = "dodge") +
+
+   geom_smooth(aes(gdp, percentage_where_some_content_withheld), method = "lm", se = TRUE) +
+
+   scale_x_log10() +
+
+   theme_minimal() +
+  
+   labs(y = "Percentage of Requests by a 
+      Country Where Some Content Withheld",
+        
+        x = "Country GDP (2019 Dollars)") +
+  
+  facet_wrap(~year)
+
+model_2_year_perc_gdp
 
 
 
 
+``` 
