@@ -690,20 +690,21 @@ glimpse(join_freedom_twitter)
 
 ```{r}
 
-corr2 <- join_freedom_twitter %>%
-  
-  summarize(correlation = cor(percentage_where_some_content_withheld, freedom_score))
-
-corr2
 
 
 ggplot(join_freedom_twitter, aes(freedom_score, accounts_specified)) + 
   
   geom_point() +
   
-  geom_jitter() +
+  scale_y_continuous(limits = c(0, 10000)) +
   
-  geom_smooth(aes(freedom_score, accounts_specified), method = "lm")
+  scale_y_log10() +
+  
+  geom_jitter(position = "dodge") +
+  
+  geom_smooth(aes(freedom_score, accounts_specified), method = "lm") +
+  
+  theme_minimal()
 
 
 
