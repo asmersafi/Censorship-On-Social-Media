@@ -438,20 +438,27 @@ ui <- fluidPage(
                                      variations with respect to the number of Twitter content removal requests
                                      made in the respective years, and comparing whether or not the two correlate.
                                      We will put this relationship to test in the Models page."),
+                  
+                            
+                            strong("A high freedom score indicates that the country is more free than one with
+                                   a lower score."),
                             
                             br(),
                             
                             helpText("This plot allows comparison between the average freedom scores and total content withholding
                                      requests made by all countries in the specific year with the corresponding freedom score and content
-                                     withholding requests of the selected country."),
+                                     withholding requests of the selected country.The plot starts from the year the particular state began
+                                     making Twitter content removal requests."),
                            
                             br(),
                             helpText("Note: Freedom Score data was only available for the years 2013 to 2019. 
                                      To read more about the Freedom Score, visit the Variable Explorer on the Data page.")
-                            
+                           
+                          
                           ),
                           mainPanel(
                             h4("Plot Display:"), 
+                            br(),
                             plotOutput("freedom_time"))
                         )
              )
@@ -554,10 +561,13 @@ police departments, or other authorized requesters within a country, where some 
      
     
 
-    ggplot(mydata1, aes(year, y_value, fill = year)) +
+    ggplot(mydata1, aes(year, y_value)) +
       geom_col() +
-      scale_fill_viridis(discrete = TRUE, 
-                         option = "D") +
+      stat_summary(aes(x = year, y = y_value),
+                   fun.y = sum,
+                   geom = "col",
+                   colour = "black",
+                   fill = "darkred")+
       theme_minimal() +
       theme(legend.position = "none") +
       labs(y = y_lab,
@@ -642,11 +652,13 @@ police departments, or other authorized requesters within a country, where some 
     
   
   
-    ggplot(country_filter, aes(year, y_value, fill = year)) +
-      geom_col() +
-      scale_fill_viridis(discrete = TRUE,  
-                         option = "B") +
-      geom_text(aes(label = y_value), vjust = -0.5) +
+    ggplot(country_filter, aes(year, y_value)) +
+      geom_col(color = "darkgrey",
+               fill = "#69b3a2") +
+      geom_label(aes(label = scales::comma(y_value)),
+                 size = 2.5,
+                 nudge_y = 0,
+                 fill = "white") +
       theme_minimal() +
       theme(legend.position = "none") +
       labs(y = y_lab,

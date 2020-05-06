@@ -842,6 +842,22 @@ specified_ac
 # Accounts withheld by twitter from the accounts specified
 
 withheld_ac <- mydata1 %>%
+     mutate(year = factor(year, levels =
+                           c("January - June 2012",
+                             "July - December 2012",
+                             "January - June 2013",
+                             "July - December 2013",
+                             "January - June 2014",
+                             "July - December 2014",
+                             "January - June 2015",
+                             "July - December 2015",
+                             "January - June 2016",
+                             "July - December 2016",
+                             "January - June 2017",
+                             "July - December 2017",
+                             "January - June 2018",
+                             "July - December 2018",
+                             "January - June 2019"))) %>% 
   ggplot(aes(year, accounts_withheld)) +
   geom_col() +
   theme_minimal() +
@@ -863,7 +879,6 @@ withheld_ac
 # tweets withheld
 
 withheld_tw <- mydata1 %>%
-  filter(country == "United Kingdom")
   ggplot(aes(year, tweets_withheld)) +
   geom_col() +
   theme_minimal() +
@@ -882,36 +897,6 @@ withheld_tw <- mydata1 %>%
 
 withheld_tw
 
-
-# total_tw_ac <-
-
-  mydata1 %>%
-  group_by(country) %>%
- summarise(c = sum(total_withholding_accounts_and_tweets))
-  # mutate(year_total_cwc = count(total_withholding_accounts_and_tweets)) %>%
-  # select(year, total_withholding_accounts_and_tweets, year_total_cwc)
-
-  ggplot(aes(year, year_total_cwc)) +
-  geom_col() +
-  # geom_label(aes(label = scales::comma(total_withholding_accounts_and_tweets)),
-  #            size = 2.5,
-  #            nudge_y = 0.5) +
-  theme_minimal() +
-  # labs(y = "Sum of Tweets and Accounts Withheld",
-  #
-#   #      x = "Time Period",
-#   #
-#   #      caption =
-# "This includes the number of tweets and accounts withheld by Twitter on
-# government request.") +
-#   #
-#   #  theme(axis.text.x = element_text(angle = 45,
-#   #                                  hjust = 1,
-#   #                                  size = 6))
-
-# total_tw_ac
-
-# 
 
 
 
@@ -970,6 +955,49 @@ the specific country's freedom scores. Data from Freedom House.",
 ```
 
 
+```{r}
+mydata1 %>% 
+    mutate(year = factor(year, levels =
+                           c("January - June 2012",
+                             "July - December 2012",
+                             "January - June 2013",
+                             "July - December 2013",
+                             "January - June 2014",
+                             "July - December 2014",
+                             "January - June 2015",
+                             "July - December 2015",
+                             "January - June 2016",
+                             "July - December 2016",
+                             "January - June 2017",
+                             "July - December 2017",
+                             "January - June 2018",
+                             "July - December 2018",
+                             "January - June 2019"))) %>% 
+  group_by(year) %>% 
+  summarize(forplot = sum(total_requests_made)) %>% 
+  ggplot(aes(year, forplot)) +
+  geom_col() +
+ geom_label(aes(label = scales::comma(forplot)),
+             size = 2.5,
+             nudge_y = 0) +
+  theme_minimal() +
+
+  labs(y = "Accounts in Violation of Twitter
+    Terms of Service",
+
+       x = "Time Period",
+
+       caption =
+      "Twitter completely removed the content from Twitter after determining it violated Twitter’s TOS.
+    It states that it review all reported content for violations of Twitter’s TOS before assessing it further. (Source: Twitter)") +
+
+   theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 6)) 
+   
+
+
+```
 
 
 
