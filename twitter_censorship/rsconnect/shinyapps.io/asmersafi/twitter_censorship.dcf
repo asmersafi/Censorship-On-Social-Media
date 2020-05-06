@@ -5,8 +5,8 @@ account: asmersafi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2235809
-bundleId: 3107895
+bundleId: 3108866
 url: https://asmersafi.shinyapps.io/twitter_censorship/
-when: 1588712175.97019
+when: 1588730611.89252
 asMultiple: FALSE
 asStatic: FALSE

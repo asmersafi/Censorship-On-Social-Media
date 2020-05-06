@@ -7,6 +7,9 @@ library(infer)
 library(broom)
 library(readr)
 library(ggthemes)
+library(viridis)
+library(ggplot2)
+
 
 
 twitter_gdp <- read_csv("twitter_gdp.csv")
@@ -256,7 +259,15 @@ ui <- fluidPage(
                  rights issues in the region."), 
                  
                  p("You can reach me at asmersafi@college.harvard.edu, or my",
-                   tags$a(href = "https://www.linkedin.com/in/asmer-asrar-safi-1b06b3185/", "LinkedIn."))),
+                   tags$a(href = "https://www.linkedin.com/in/asmer-asrar-safi-1b06b3185/", "LinkedIn.")),
+                 
+                 h3("Acknowledgments"),
+                 
+                 p("I would like to thank Preceptor Kane, my TF Kaneesha, and the Gov 1005 community for 
+                   helping me develop a passion for something I had never previously thought of pursuing.
+                   I would specifically like to thank Hamid Khan, a fellow Gov 1005 student and mentor for 
+                   helping me get back up every time a problem set or an R Studio error discouraged me from
+                   pursuing data science further.")),
         
         tabPanel("Data",
                  sidebarLayout(
@@ -331,7 +342,7 @@ ui <- fluidPage(
                         )
     )),
     
-    tabPanel("Visualization",
+    tabPanel("Data Visualizations",
              tabsetPanel(
                tabPanel("Overall Requests and Response data:",
                         sidebarLayout(
@@ -343,8 +354,22 @@ ui <- fluidPage(
                                         multiple = FALSE
                                         
                           ),
-                          helpText("The plot tracks overall changes in the variable made over 
-                                   the time period January 2012 to June 2019.")),
+                          helpText("The plot tracks overall changes in the selected variable made over 
+                                   the time period January 2012 to June 2019."),
+                          br(),
+                          
+                          helpText("The first three variabeles, namely 'Accounts - TOS Violations', 
+                          Accounts Specified', and 'Total Requests Made (by various institutions, agencies)'
+                          present data for all of the countries mentioned in the drop down menu. Each of these
+                          countries have, at some point over the period of seven years, lodged a request to 
+                          Twitter for content withholding. However, the latter four variables concerning 
+                          actual content withheld concerns only the 18 countries Twitter specified as ones that
+                          were successful in having content removed."),
+                          
+                          br(),
+                          
+                          helpText("For more details, visit the 'Withheld Content' tab on the Variable Explorer (Data page), or
+                                   'Track Requests/Response by Country' tab on the Visualizations page.")),
                           
                           mainPanel(
                             h4("Plot Display:"),
@@ -360,25 +385,77 @@ ui <- fluidPage(
                             pickerInput(inputId = "countryid",
                                         label = "Choose Country:",
                                         choices = tg_countries,
-                                        multiple = FALSE
+                                        multiple = FALSE,
+                                        select = "Turkey"
                                         
                             ),
                             br(),
                             pickerInput(inputId = "overallvars1",
                                         label = "Choose Variable:",
                                         choices = variablesvisual,
-                                        multiple = FALSE
-                          )),
+                                        multiple = FALSE,
+                                        select = "accounts_specified"
+                          ),
+                          
+                          helpText("Note: The only countries where some content was withheld by Twitter were Argentina, 
+                                   Australia, Belgium, Brazil, Canada, France, Germany, India, Ireland, Israel, Japan, 
+                                   Netherlands, New Zealand, Russia, South Korea, Spain, Turkey, and the United Kingdom. Requests
+                                   from other countries have not yet been complied with. 
+                                   "),
+                        br(),
+                          helpText("Hence, the variables 'Tweets Withheld', 'Accounts Withheld', 'Requests where some content was
+                          withheld', and 'Withheld Content (sum of accounts and tweets withheld)' will only display data visualizations for the 
+                          aforementioned 18 countries. For the rest of the countries, we can only visualize accounts that violated TOS, accounts that were 
+                          specified for withholding (but eventually were not withheld), and the total number of requests made by the country and its
+                          various institutions."),
+                        br(),
+                          helpText("The countries available in the drop down menu are countries that have made at least one request to
+                                   Twitter for content withholding. It is important to note that list does not feature all UN recognized states,
+                                   since many have not yet approached Twitter for content withholding.")),
+                        
                           mainPanel(
-                            h4("Plot Display"),
+                            h4("Plot Display:"),
                             br(),
                             plotOutput("countryvisuals")
                           )
                         )),
                
-               tabPanel("Freedom Scores over time:")
+               tabPanel("Freedom Scores over time:",
+                        sidebarLayout(
+                          sidebarPanel(
+                            br(),
+                            pickerInput(inputId = "countryfreedom",
+                                        label = "Choose Country:",
+                                        choices = tg_countries,
+                                        multiple = FALSE,
+                                        select = "Turkey"),
+                            
+                            br(),
+                            helpText("This section seeks to visualize changes in the freedom scores
+                                     of countries over time. While there are no substantial decreases or
+                                     increases in the freedom scores of countries over the seven year period
+                                     we seek to investigate, it is interesting to nevertheless visualize these
+                                     variations with respect to the number of Twitter content removal requests
+                                     made in the respective years, and comparing whether or not the two correlate.
+                                     We will put this relationship to test in the Models page."),
+                            
+                            br(),
+                            
+                            helpText("This plot allows comparison between the average freedom scores and total content withholding
+                                     requests made by all countries in the specific year with the corresponding freedom score and content
+                                     withholding requests of the selected country."),
+                           
+                            br(),
+                            helpText("Note: Freedom Score data was only available for the years 2013 to 2019. 
+                                     To read more about the Freedom Score, visit the Variable Explorer on the Data page.")
+                            
+                          ),
+                          mainPanel(
+                            h4("Plot Display:"), 
+                            plotOutput("freedom_time"))
+                        )
              )
-             ),
+             )),
     
     
     tabPanel("Models")
@@ -388,6 +465,25 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
+  
+  mydata1 <- read_csv("mydata1.csv") %>% 
+    mutate(year = factor(year, levels =
+                           c("January - June 2012",
+                             "July - December 2012",
+                             "January - June 2013",
+                             "July - December 2013",
+                             "January - June 2014",
+                             "July - December 2014",
+                             "January - June 2015",
+                             "July - December 2015",
+                             "January - June 2016",
+                             "July - December 2016",
+                             "January - June 2017",
+                             "July - December 2017",
+                             "January - June 2018",
+                             "July - December 2018",
+                             "January - June 2019")))
+  
   
   output$visualoverall <- renderPlot({
 
@@ -455,6 +551,8 @@ police departments, or other authorized requesters within a country, where some 
       
       
     }
+     
+    
 
     ggplot(mydata1, aes(year, y_value, fill = year)) +
       geom_col() +
@@ -468,7 +566,8 @@ police departments, or other authorized requesters within a country, where some 
            title = title1) +
       theme(axis.text.x = element_text(angle = 45,
                                        hjust = 1,
-                                       size = 8)) 
+                                       size = 8)) +
+      theme(plot.title = element_text(face = "bold", size = 10, hjust = 0.5))
       
 })
   
@@ -495,7 +594,7 @@ police departments, or other authorized requesters within a country, where some 
     }
     
     else if(input$overallvars1 == "accounts_tos") {
-      y_value <- mydata1$accounts_tos
+      y_value <- country_filter$accounts_tos
       y_lab <- "Accounts in Violation of Twitter
     Terms of Service"
       title1 <- "Tweets/Accounts in Twitter Terms of Service (TOS) Violations"
@@ -504,7 +603,7 @@ police departments, or other authorized requesters within a country, where some 
     }
     
     else if(input$overallvars1 == "accounts_withheld") {
-      y_value <- mydata1$accounts_withheld
+      y_value <- country_filter$accounts_withheld
       y_lab <- "Accounts withheld by Twitter (from
        accounts specified)"
       title1 <- "Accounts withheld by Twitter"
@@ -513,7 +612,7 @@ the accounts specified by Governments. (Source: Twitter)"
     }
     
     else if(input$overallvars1 == "tweets_withheld") {
-      y_value <- mydata1$tweets_withheld
+      y_value <- country_filter$tweets_withheld
       y_lab <- "Tweets withheld by Twitter"
       title1 <- "Tweets withheld by Twitter"
       caption <- "This includes the number of tweets withheld by Twitter on
@@ -521,7 +620,7 @@ the accounts specified by Governments. (Source: Twitter)"
     }
     
     else if(input$overallvars1 == "total_withholding_accounts_and_tweets") {
-      y_value <- mydata1$total_withholding_accounts_and_tweets
+      y_value <- country_filter$total_withholding_accounts_and_tweets
       y_lab <- "Sum of Tweets and Accounts Withheld"
       title1 <- "Sum of tweets and accounts withheld by
 Twitter over time"
@@ -530,7 +629,7 @@ Twitter over time"
     }
     
     else if(input$overallvars1 == "requests_where_content_withheld") {
-      y_value <- mydata1$requests_where_content_withheld
+      y_value <- country_filter$requests_where_content_withheld
       y_lab <- "Government requests where some
       content was withheld"
       title1 <- "Government requests where some
@@ -543,10 +642,11 @@ police departments, or other authorized requesters within a country, where some 
     
   
   
-    ggplot(country_filter, aes(year, y_value)) +
+    ggplot(country_filter, aes(year, y_value, fill = year)) +
       geom_col() +
       scale_fill_viridis(discrete = TRUE,  
-                         option = "D") +
+                         option = "B") +
+      geom_text(aes(label = y_value), vjust = -0.5) +
       theme_minimal() +
       theme(legend.position = "none") +
       labs(y = y_lab,
@@ -558,9 +658,61 @@ police departments, or other authorized requesters within a country, where some 
                                        hjust = 1,
                                        size = 8)) 
     
-    
+  
   })
   
+  
+  output$freedom_time <- renderPlot({
+    
+  join_data <-  read_csv("freedom_twitter_gdp.csv")
+  
+  
+  join_data %>% 
+    group_by(year) %>% 
+    mutate(mean_score = mean(freedom_score)) %>%
+    mutate(totalreqyr = sum(total_requests_made)) %>% 
+    ungroup() %>%
+    filter(country == input$countryfreedom) %>%
+    ggplot(aes(year, freedom_score)) +
+    geom_line(aes(year, freedom_score),
+              color = "grey") +
+    geom_point(aes(size = total_requests_made),
+               shape=21,
+               color="black",
+               alpha = 0.5,
+               fill="#69b3a2") +
+    geom_line(aes(year, mean_score),
+              color = "grey",
+              linetype = "dashed") +
+    geom_point(aes(year, mean_score, size = totalreqyr),
+               color = "black",
+               shape = 21,
+               alpha = 0.5,
+               fill = "darkred") +
+    theme_minimal() +
+    labs(y = "Freedom Score",
+         x = "Year",
+         title = print(input$countryfreedom),
+         subtitle = "Freedom score and total requests made for content withholding (2013-2019)",
+         caption = "
+Dashed line representes the year's mean freedom score for all countries. The solid line represents
+the specific country's freedom scores. Data from Freedom House.",
+         size = "Total Requests Made") +
+    theme(plot.title = element_text(face = "bold",
+                                    size = 15,
+                                    hjust = 0.5),
+          plot.subtitle = element_text(face = "italic",
+                                       size = 10,
+                                       hjust = 0.5),
+          plot.caption = element_text(face = "italic",
+                                      hjust = 0.5,
+                                      size = 12)) 
+   
+  
+    
+    
+    
+ })
   
 }
 
