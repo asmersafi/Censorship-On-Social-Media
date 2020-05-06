@@ -1,0 +1,12 @@
+name: twitter_censorship
+title: twitter_censorship
+username:
+account: asmersafi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2235809
+bundleId: 3107895
+url: https://asmersafi.shinyapps.io/twitter_censorship/
+when: 1588712175.97019
+asMultiple: FALSE
+asStatic: FALSE

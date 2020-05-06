@@ -433,19 +433,18 @@ join_for_model <- formodel %>%
   
    # Removing Total rows
   
-   mutate(country = str_remove(country, "TOTAL"), 
-           
-          country = str_remove(country, "Total")) %>% 
+   filter(!country %in% c("Total", "TOTAL")) %>% 
   
    # mutate(gdp =  replace_na(gdp, 0)) %>% 
    
-   filter(!year == "2019")
+   filter(!year == "2019") 
   
   
 
 join_for_model
 
 
+write.csv(x = join_for_model, "twitter_gdp.csv")
 
 
 ```
@@ -560,10 +559,12 @@ model_1
 ```{r, warning=FALSE, echo=FALSE}
 
 model_2_year_perc_gdp <- join_for_model %>%
+   
+   # filter(year %in% 2012) %>% 
+ 
+   ggplot(aes(gdp, percentage_where_some_content_withheld, size = total_requests_made)) +
 
-   ggplot(aes(gdp, percentage_where_some_content_withheld)) +
-
-   geom_point() + 
+   geom_point(alpha = 0.4) + 
   
    geom_jitter(position = "dodge") +
 
@@ -576,9 +577,9 @@ model_2_year_perc_gdp <- join_for_model %>%
    labs(y = "Percentage of Requests by a 
       Country Where Some Content Withheld",
         
-        x = "Country GDP (2019 Dollars)") +
+        x = "Country GDP (2010 Dollars)") 
   
-  facet_wrap(~year)
+  # facet_wrap(~year)
 
 model_2_year_perc_gdp
 
@@ -598,25 +599,31 @@ model_3_country_perc_gdp <- function(x){
    filter(country == x) %>% 
 
    ggplot(aes(gdp, percentage_where_some_content_withheld)) +
-
    geom_point() + 
-  
    geom_jitter(position = "dodge") +
-
    geom_smooth(aes(gdp, percentage_where_some_content_withheld), method = "lm", se = TRUE) +
-
    theme_classic() +
-  
    labs(title = print(x),
-   
        y = "Percentage of Requests by the 
       Country Where Some Content was Withheld",
-        
         x = "Country GDP (2019 Dollars)") 
 }
 
 
-model_3_country_perc_gdp("India")
+model_3_country_perc_gdp("Russian Federation")
+
+
+# kyun <- join_for_model %>%
+  
+ggplot(aes(total_requests_made, percentage_where_some_content_withheld)) +
+   geom_point() + 
+   geom_jitter(position = "dodge") +
+   
+   geom_smooth(aes(total_requests_made, percentage_where_some_content_withheld), method = "lm", se = TRUE) +
+   scale_x_log10() +
+   theme_classic()
+
+
 ```
 
 ```{r, load freedom index data}
@@ -688,7 +695,7 @@ glimpse(join_freedom_twitter)
 ```
 
 
-```{r}
+```{r, warning = FALSE}
 
 
 
@@ -710,6 +717,28 @@ ggplot(join_freedom_twitter, aes(freedom_score, accounts_specified)) +
 
 ```
 
+```{r}
+unique_countries <- 
+  join_for_model %>% 
+  select(country) %>% 
+  unique() %>%  
+  arrange(country) %>% 
+  mutate(clean = country) %>% 
+  # mutate(clean = tolower(country)) %>% 
+  # mutate(clean = str_replace(clean, " ", "_")) %>% 
+  select(clean, country) %>% 
+  # mutate(clean = str_replace(clean, "bosnia_and herzegovina", "bosnia_and_herzegovina")) %>% 
+  mutate(clean = shQuote(clean)) %>% 
+  mutate(country = shQuote(country)) %>%
+  mutate(country = paste(country, sep = ",")) %>% 
+  mutate(both = paste(clean, "=", country)) %>% 
+  mutate(both = paste(both,","))
+  
+unique_countries
+
+write.csv(x = unique_countries, "unique_countries.csv")
+  
+```
 
 
 

@@ -1,0 +1,53 @@
+---
+title: "For Hamid"
+author: "Asmer Asrar Safi"
+date: "5/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(fivethirtyeight)
+library(tidyverse)
+library(viridis)
+library(transformr)
+library(RColorBrewer)
+library(readxl)
+library(naniar)
+library(dplyr)
+library(readr)
+library(markdown)
+library(patchwork)
+library(purrr)
+library(stringr)
+library(ggthemes)
+library(tibble)
+library(gganimate)
+library(janitor)
+library(skimr)
+library(gt)
+library(forcats)
+library(jsonlite)
+library(broom)
+```
+
+```{r}
+
+read_csv("mydata1.csv")
+```
+
+
+```{r}
+total_tw_ac <- 
+  
+  mydata1 %>%
+  group_by(year) %>%
+  mutate(year_total_cwc = sum(total_withholding_accounts_and_tweets)) %>% 
+  select(country, year, total_withholding_accounts_and_tweets, year_total_cwc)
+
+
+total_tw_ac
+```
+
