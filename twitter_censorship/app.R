@@ -217,7 +217,24 @@ police departments, or other authorized requesters within a country."
 accounts_specified1 <- "This includes the unique number of accounts identified in 
 the requests Twitter received. (Source: Twitter)"
 
-
+big18countries <- c("Argentina",
+           "Australia",
+           "Belgium",
+           "Brazil",
+           "Canada",
+           "France",
+           "Germany",
+           "India",
+           "Ireland",
+           "Israel",
+           "Japan",
+           "Netherlands",
+           "New Zealand",
+           "Russia",
+           "South Korea",
+           "Spain",
+           "Turkey",
+           "United Kingdom")
 
 
 ui <- fluidPage(
@@ -481,20 +498,21 @@ ui <- fluidPage(
                                        
                                        h4("Regression Results:"),
                                        
-                                       p("In this section, we investigate the effect of a country's 
+                                       helpText("In this section, we investigate the effect of a country's 
                                          GDP (indicative of a country's wealth, economic power) on whether or 
                                          not Twitter decides to comply with its content removal requests."),
                                        
-                                       p("You can choose to visualize the relative number of total requests made
+                                       helpText("You can choose to visualize the relative number of total requests made
                                          whilst simultaneously looking at the relationship between the percentage of 
                                          requests complied with, against the GDP (in 2010 US dollars."),
                                        
-                                       
+                                       br(),
                                        
                                        tableOutput("regres1"), 
-                                     
+                                        
+                                       br(),
                                        
-                                       p("From our results, it can be interpreted that a $1 increase in the GDP of a country leads
+                                       helpText("From our results, it can be interpreted that a $1 increase in the GDP of a country leads
                                          to a 6.232805e-13% increase in the percentage of requests that Twitter will comply
                                          with, upon receiving from a state This indicates a weak positive relationship 
                                          between the two variables."),
@@ -516,11 +534,13 @@ ui <- fluidPage(
                                        
                                        helpText("Use the slider above to select a GDP amount (in 2010 US Dollars). Based off
                                                 this linear model, our predictor will return the percentage of requests for content
-                                                removal Twitter will likely comply with."),
+                                                removal Twitter will likely comply with. The minimum and maximum GDP values correspond
+                                                to the minimum and maximum GDP amounts in our dataset, for the given time period and 
+                                                countries."),
                                        
                                        sliderInput(
                                          inputId = "gdp_size",
-                                         label = "Select GDP",
+                                         label = "Select GDP amount (in 2010 US Dollars):",
                                          min = 4.379e+09,
                                          max = 2.054e+13,  
                                          value = 3.533e+11  ,
@@ -537,6 +557,7 @@ ui <- fluidPage(
                                   
                                                verbatimTextOutput("info"),
                                                br(), 
+                                       br(),
                                        h5("Predictor Results:"),
                                                textOutput("allcountriespredictor"))
                                      
@@ -545,13 +566,139 @@ ui <- fluidPage(
                                    
                                    
                                    ),
-                          tabPanel("Countries where some content was withheld:"),
-                          tabPanel("By year:")
+                          tabPanel("Countries where some content was withheld:",
+                                   sidebarLayout(
+                                     sidebarPanel(
+                                       width = 5,
+                                       
+                                       br(),
+                                       
+                                       h4("Regression Results:"),
+                                       
+                                       helpText("In this section, we investigate the effect of a country's 
+                                         GDP (indicative of a country's wealth, economic power) on whether or 
+                                         not Twitter decides to comply with its content removal requests. However,
+                                         unlike the previous section, in this model we will filter for the 18 countries
+                                         which had some success in having content withheld by Twitter."),
+                                       
+                                       helpText("You can choose to visualize the relative number of total requests made
+                                         whilst simultaneously looking at the relationship between the percentage of 
+                                         requests complied with, against the GDP (in 2010 US dollars."),
+                                       
+                                       br(),
+                                       
+                                       tableOutput("regres2"), 
+                                       
+                                       br(), 
+                                       
+                                       helpText("From our results, it can be interpreted that a $1 increase in the GDP of a country leads
+                                         to a 3.413396e-12% increase in the percentage of requests that Twitter will comply
+                                         with, upon receiving from a state This indicates a weak positive relationship 
+                                         between the two variables."),
+                                       
+                                       checkboxInput(
+                                         inputId = "total_requests_or_no2",
+                                         label = "Display total requests for content removal
+                                         at each point (by size).",
+                                         value = TRUE),
+                                       
+                                       br(), 
+                                       
+                                       h4("Twitter Compliance Predictor - Countries where content was withheld:"),
+                                       # Slider input for predictor: 
+                                       
+                                       helpText("Use the slider above to select a GDP amount (in 2010 US Dollars). Based off
+                                                this linear model, our predictor will return the percentage of requests for content
+                                                removal Twitter will likely comply with. The minimum and maximum GDP values correspond
+                                                to the minimum and maximum GDP amounts in our dataset, for the given time period and 
+                                                filtered for the 18 countries where content was withheld."),
+                                       
+                                       
+                                       sliderInput(
+                                         inputId = "gdp_size2",
+                                         label = "Select GDP amount (in 2010 US Dollars):",
+                                         min = 1.772e+11,
+                                         max = 6.203e+12,  
+                                         value = 1.830e+12,
+                                         ticks = FALSE,
+                                         sep = "")
+                                       
+                                     ),
+                                     
+                                     mainPanel(
+                                       width = 7,
+                                       plotOutput("bigeighteen",
+                                                  click = "plot_click",
+                                                  hover = "plot_hover"),
+                                       
+                                       
+                                       verbatimTextOutput("info2"),
+                                       br(), 
+                                       
+                                       helpText("Twitter has withheld content in the following 18 countries in response to legal
+                                       demands: Argentina,Australia, Belgium, Brazil, Canada, France, Germany, India, Ireland, Israel, Japan, 
+                                       Netherlands, New Zealand, Russia, South Korea, Spain, Turkey, and the United Kingdom."), 
+                                       br(),
+                                       h5("Predictor Results:"),
+                                       textOutput("big18predictor"))
+            
+                                       
+                                     )
+                                   ),
                           
-                        )
+                          tabPanel("By year:",
+                                   sidebarLayout(
+                                     sidebarPanel(
+                                       width = 5,
+                                       
+                                       br(), 
+                                       
+                                       h4("Regression Results"), 
+                                       
+                                       helpText("In this section, we investigate the effect of a country's 
+                                         GDP (indicative of a country's wealth, economic power) on whether or 
+                                         not Twitter decides to comply with its content removal requests. Filtering
+                                         for the 18 countries where content was withheld, this section allows us the
+                                         additional ability to compare the effect of GDP on Twitter removing
+                                         content across years."),
+                                       
+                                       sliderInput(
+                                         inputId = "model_year",
+                                         label = "Select year:",
+                                         min = 2012,
+                                         max = 2018,  
+                                         value = 2016,
+                                         ticks = TRUE,
+                                         sep = ""),
+                                       
+                                       br(),
+                                       
+                                       tableOutput("regres3"),
+                                       
+                                       br(),
+                                       
+                                       textOutput("explaingt")
+                                       
+                                       
+                                       
+                                     ),
+                                     
+                                     mainPanel(width = 5,
+                                       plotOutput("byyear",
+                                                  click = "plot_click"),
+                                       
+                                       
+                                       verbatimTextOutput("info3"),
+                                       
+                                       
+                                       )
+                                     
+                                     
+                                   ))
                         
                         
-                        ),
+                        )),
+             
                tabPanel("Freedom Scores and Number of Requests Made")
       
               
@@ -817,12 +964,14 @@ the specific country's freedom scores. Data from Freedom House.",
     
     
  })
-  
+
+# Plot for Model 1     
   
   output$allcountries <- renderPlot({
     
  twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
  
+# Display Size option
 
  if(input$total_requests_or_no == TRUE) {
    size_value <- twitter_gdp_model$sum_total_requests_made_yr
@@ -866,6 +1015,7 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
+  # Text for the clicks. 
   
   output$info <- renderText({
 
@@ -879,7 +1029,7 @@ the specific country's freedom scores. Data from Freedom House.",
              " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
     }
 
-    paste0("Click on the points on the plot for specific values",
+    paste0("Click on the points on the plot for specific values:",
            "\n",
       "Results: ", xy_str(input$plot_click)
       
@@ -891,6 +1041,8 @@ the specific country's freedom scores. Data from Freedom House.",
 
   })
   
+  
+  #Regression model GT Table
  
   output$regres1 <- renderTable(align = 'c', { 
     
@@ -910,6 +1062,7 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
+  #Predictor Model 1 
   
   output$allcountriespredictor <- renderText({
     
@@ -946,6 +1099,142 @@ the specific country's freedom scores. Data from Freedom House.",
 
    
   })
+  
+  # Plot Model 2 
+
+  output$bigeighteen <- renderPlot({
+
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries)
+    
+    if(input$total_requests_or_no2 == TRUE) {
+      size_value <- twitter_gdp_model$sum_total_requests_made_yr
+      size_lab <- "Total Requests Made"
+
+    }
+
+    else if(input$total_requests_or_no2 == FALSE) {
+      size_value <- NULL
+      size_lab <- NULL
+    }
+    
+
+ twitter_gdp_model %>% 
+      ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = size_value)) +
+      geom_point(alpha = 0.3,
+                 shape = 21,
+                 color = "black",
+                 fill = "darkred") +
+      theme_minimal() +
+      scale_x_log10() +
+      geom_smooth(method = "lm", color = "blue") +
+      labs(y = "Percentage of requests where some
+      content was withheld",
+           x = "GDP (2010 US Dollars)",
+           size = "Total Requests Made",
+           title = "Percentage of Requests Where Some Content was Withheld 
+    against GDP (2010 US Dollars)",
+           subtitle = "Includes data only for the 18 countries where content was withheld, in the years 2012-2018") +
+      
+      theme(plot.title = element_text(face = "bold",
+                                      size = 15,
+                                      hjust = 0.5),
+            plot.subtitle = element_text(face = "italic",
+                                         size = 10,
+                                         hjust = 0.5))
+    
+    
+    
+
+
+
+  })
+ 
+  #Predictor Model 2 (Big 18)
+
+  output$big18predictor <- renderText({
+    
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries)
+    
+    filtercountrymodel <-  twitter_gdp_model %>% 
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) 
+    
+    fit <-  predict(filtercountrymodel,
+                    newdata = tibble(gdp = input$gdp_size2), 
+                    interval = "confidence") %>% 
+      tidy() %>% 
+      pull(fit) %>% 
+      round(3)
+    
+    lwr <-  predict(filtercountrymodel,
+                    newdata = tibble(gdp = input$gdp_size2), 
+                    interval = "confidence") %>% 
+      tidy() %>% 
+      pull(lwr) %>% 
+      round(3)
+    
+    upr <-  predict(filtercountrymodel,
+                    newdata = tibble(gdp = input$gdp_size2), 
+                    interval = "confidence") %>% 
+      tidy() %>% 
+      pull(upr) %>% 
+      round(3)
+    
+    # The 95% prediction interval of the eruption duration for the waiting time of 80 minutes is between 3.1961 and 5.1564 minutes.
+    paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
+          indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
+          compliance with your requests is between ", lwr, "% and ", upr, "%.") 
+    
+    
+  })
+  
+  
+  
+  output$regres2 <- renderTable(align = 'c', { 
+    
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries)
+    
+    twitter_gdp_model %>%
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) %>%
+      gt() %>% 
+      cols_label(term = "Term",
+                 estimate = "Estimate",
+                 conf.low = "Lower Bound",
+                 conf.high = "Upper Bound")
+    
+    
+    
+  })
+  
+  output$info2 <- renderText({
+    
+    xy_str <- function(e) {
+      if(is.null(e)) return("-\n")
+      paste0("GDP (2010 US Dollars) = $", round(e$x, 1),"\n", "Percentage Requests where content withheld = ", round(e$y, 1), "%", "\n")
+    }
+    xy_range_str <- function(e) {
+      if(is.null(e)) return("NULL\n")
+      paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1),
+             " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+    }
+    
+    paste0("Click on the points on the plot for specific values:",
+           "\n",
+           "Results: ", xy_str(input$plot_click)
+           
+    )
+    
+    
+    
+    
+    
+  })
+  
+  
   
   
 }

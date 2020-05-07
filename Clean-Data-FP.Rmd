@@ -491,10 +491,10 @@ join_for_model <- formodel %>%
   
   
 
-join_for_model
+view(join_for_model)
 
 
-write.csv(x = join_for_model, "twitter_gdp.csv")
+# write.csv(x = join_for_model, "twitter_gdp.csv")
 
 
 ```
