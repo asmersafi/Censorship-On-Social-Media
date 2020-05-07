@@ -8,6 +8,8 @@ library(broom)
 library(readr)
 library(ggthemes)
 library(viridis)
+library(gt)
+library(plotly)
 library(ggplot2)
 
 
@@ -271,6 +273,7 @@ ui <- fluidPage(
         
         tabPanel("Data",
                  sidebarLayout(
+                   
                    sidebarPanel( 
                  
                  h3("Sources"), 
@@ -465,7 +468,64 @@ ui <- fluidPage(
              )),
     
     
-    tabPanel("Models")
+    tabPanel("Models",
+             tabsetPanel(
+               tabPanel("GDP and Percentage of Total Requests Complied with",
+                        tabsetPanel(
+                  
+                          tabPanel("All Countries:",
+                                   sidebarLayout(
+                                     sidebarPanel(
+                                       br(), 
+                                       
+                                       # Checkbox input to display the size of
+                                       # the total requests made. 
+                                       
+                                       checkboxInput(
+                                         inputId = "total_requests_or_no",
+                                         label = "Display total requests for content removal
+                                         at each point:",
+                                         value = TRUE),
+                                       
+                                       # Slider input for predictor: 
+                                       
+                                       sliderInput(
+                                         inputId = "gdp_size",
+                                         label = "Select GDP",
+                                         min = 4.379e+09,
+                                         max = 2.054e+13,  
+                                         value = 3.533e+11  ,
+                                         ticks = FALSE,
+                                         sep = "")
+                                       
+                                     ),
+                                     
+                                     mainPanel(plotOutput("allcountries",
+                                                          click = "plot_click",
+                                                          hover = "plot_hover"),
+                                               verbatimTextOutput("info"),
+                                               br(), 
+                                               gt_output("regres1"), 
+                                               textOutput("allcountriespredictor"))
+                                     
+                                     
+                                   )
+                                   
+                                   
+                                   ),
+                          tabPanel("Countries where some content was withheld:"),
+                          tabPanel("By year:")
+                          
+                        )
+                        
+                        
+                        ),
+               tabPanel("Freedom Scores and Number of Requests Made")
+      
+              
+               
+               
+             ))
     
     
     ))
@@ -725,6 +785,130 @@ the specific country's freedom scores. Data from Freedom House.",
     
     
  })
+  
+  
+  output$allcountries <- renderPlot({
+    
+ twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
+ 
+
+ if(input$total_requests_or_no == TRUE) {
+   size_value <- twitter_gdp_model$sum_total_requests_made_yr
+   size_lab <- "Total Requests Made"
+   
+ }
+
+ else if(input$total_requests_or_no == FALSE) {
+   size_value <- NULL
+   size_lab <- NULL
+ }
+    
+ twitter_gdp_model %>%  
+   ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = size_value)) +
+   geom_point(alpha = 0.3,
+              shape=21,
+              color="black",
+              fill="#69b3a2") +
+   scale_x_log10() +
+   geom_smooth(aes(gdp, 
+                   sum_percentage_where_content_withheld_yr),
+               method = "lm", 
+               color = "black") +
+   theme_minimal() +
+   labs(y = "Percentage of requests where some
+      content was withheld",
+        x = "GDP (2010 US Dollars)",
+        size = "Total Requests Made",
+        title = "Percentage of Requests Where Some Content was Withheld 
+    against GDP (2010 US Dollars)",
+        subtitle = "For the years 2012-2018") +
+ 
+ theme(plot.title = element_text(face = "bold",
+                                 size = 15,
+                                 hjust = 0.5),
+       plot.subtitle = element_text(face = "italic",
+                                    size = 10,
+                                    hjust = 0.5))
+
+    
+    
+  })
+  
+  
+  output$info <- renderText({
+
+    xy_str <- function(e) {
+      if(is.null(e)) return("-\n")
+      paste0("GDP (2010 US Dollars) = ", round(e$x, 1), " Percentage of Requests where some content withheld = ", round(e$y, 1), "\n")
+    }
+    xy_range_str <- function(e) {
+      if(is.null(e)) return("NULL\n")
+      paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1),
+             " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+    }
+
+    paste0(
+      "Click: ", xy_str(input$plot_click),
+      "Hover: ", xy_str(input$plot_hover)
+
+    )
+
+
+
+  })
+  
+  twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
+  
+  output$regres1 <- render_gt({
+    
+    twitter_gdp_model %>% 
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
+      tidy(conf.int = TRUE) %>%
+      select(term, estimate, conf.low, conf.high) %>% 
+      gt() %>% 
+      cols_label(term = "Term", 
+                  estimate = "Estimate",
+                  conf.low = "Lower Bound", 
+                  conf.high = "Upper Bound") %>% 
+      row_group.font.size(12)
+    
+  })
+  
+  
+  output$allcountriespredictor <- renderText({
+    
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
+    
+   allcountriesmodel <-  twitter_gdp_model %>% 
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) 
+    
+   fit <-  predict(allcountriesmodel,
+            newdata = tibble(gdp = input$gdp_size), 
+            interval = "confidence") %>% 
+            tidy() %>% 
+            pull(fit) %>% 
+     round(4)
+   
+   lwr <-  predict(allcountriesmodel,
+                   newdata = tibble(gdp = input$gdp_size), 
+                   interval = "confidence") %>% 
+     tidy() %>% 
+     pull(lwr) %>% 
+     round(4)
+   
+   upr <-  predict(allcountriesmodel,
+                   newdata = tibble(gdp = input$gdp_size), 
+                   interval = "confidence") %>% 
+     tidy() %>% 
+     pull(upr) %>% 
+     round(4)
+
+   paste0("According the linear regression model, the GDP amount (in US Dollars) that you selected
+          yields a progress of", fit, "and", lwr, "and", upr)
+
+   
+  })
+  
   
 }
 
