@@ -13,9 +13,13 @@ library(plotly)
 library(ggplot2)
 
 
+# Loading in the data
 
 twitter_gdp <- read_csv("twitter_gdp.csv")
 mydata1 <- read_csv("mydata1.csv") %>% 
+  
+# Defining the levels
+  
   mutate(year = factor(year, levels =
                                 c("January - June 2012",
                                   "July - December 2012",
@@ -33,7 +37,8 @@ mydata1 <- read_csv("mydata1.csv") %>%
                                   "July - December 2018",
                                   "January - June 2019")))
 
- 
+# Creating the year values list
+
 tg_year <- tibble(
     "2012" = "2012",
     "2013" = "2013", 
@@ -43,6 +48,7 @@ tg_year <- tibble(
     "2017" = "2017", 
     "2018" = "2018")
 
+# Creating the countries value list 
 
 tg_countries <- tibble(
     'Afghanistan' = 'Afghanistan' ,
@@ -125,7 +131,8 @@ tg_countries <- tibble(
     'Uruguay' = 'Uruguay' ,
     'Uzbekistan' = 'Uzbekistan' ,
     'Venezuela' = 'Venezuela')
-    
+  
+# Creating the Twitter Data Values list  
 
 variables <- c("Country GDP (from the World Bank)" = "gdp", 
                "Freedom Score (from Freedom House)" = "score",
@@ -147,6 +154,9 @@ variablesvisual <- tibble("Accounts - Terms of Service Violations" = "accounts_t
                      "Accounts Withheld" = "accounts_withheld", 
                      "Requests where some content was withheld" = "requests_where_content_withheld"
                )
+
+
+# Defining variables for the Variable explorer. 
 
 score1 <- c("The Freedom Score is Freedom House's measure of the degree of freedom 
 a country allows. A country or territory is awarded 0 to 4 points for each of 10
@@ -217,6 +227,8 @@ police departments, or other authorized requesters within a country."
 accounts_specified1 <- "This includes the unique number of accounts identified in 
 the requests Twitter received. (Source: Twitter)"
 
+# Defining countries where some content was withheld.
+
 big18countries <- c("Argentina",
            "Australia",
            "Belgium",
@@ -236,6 +248,7 @@ big18countries <- c("Argentina",
            "Turkey",
            "United Kingdom")
 
+# UI setup
 
 ui <- fluidPage(
     
@@ -322,6 +335,8 @@ ui <- fluidPage(
                  
                  p("Access my GitHub Repository", tags$a(href = "https://github.com/asmersafi/Censorship-On-Social-Media", "here."))), 
                  
+                 # Creating Variable Explorer for more details about the dataset variables: 
+                 
                  mainPanel(h3("Variable Explorer"),
                            h4("Learn more about the dataset variables:"),
                            tabsetPanel(
@@ -368,6 +383,9 @@ ui <- fluidPage(
                         sidebarLayout(
                           sidebarPanel(
                             br(),
+                            
+                            # Plotting overall variables over the time-period 2012-2019
+                            
                             pickerInput(inputId = "overallvars",
                                         label = "Choose Variable:",
                                         choices = variablesvisual,
@@ -394,14 +412,22 @@ ui <- fluidPage(
                           mainPanel(
                             h4("Plot Display:"),
                             br(),
+                            
+                            # Plotting overall variables over the time-period 2012-2019
+                            
                             plotOutput("visualoverall")
                           )
                         )),
+               
+               # Plotting the variables by filtering for the country
                
                tabPanel("Track Requests/Response by Country:",
                         sidebarLayout(
                           sidebarPanel(
                             br(),
+                            
+                            # Picker to choose country
+                            
                             pickerInput(inputId = "countryid",
                                         label = "Choose Country:",
                                         choices = tg_countries,
@@ -410,6 +436,9 @@ ui <- fluidPage(
                                         
                             ),
                             br(),
+                            
+                            # Picker to choose variable 
+                            
                             pickerInput(inputId = "overallvars1",
                                         label = "Choose Variable:",
                                         choices = variablesvisual,
@@ -440,10 +469,16 @@ ui <- fluidPage(
                           )
                         )),
                
+               # Mapping Freedom Scores of individual countries over time, in comparison with
+               # the mean freedom scores during that time period. 
+               
                tabPanel("Freedom Scores over time:",
                         sidebarLayout(
                           sidebarPanel(
                             br(),
+                            
+                            # Picker Input to choose country
+                            
                             pickerInput(inputId = "countryfreedom",
                                         label = "Choose Country:",
                                         choices = tg_countries,
@@ -479,6 +514,9 @@ ui <- fluidPage(
                           mainPanel(
                             h4("Plot Display:"), 
                             br(),
+                            
+                            # Display plot for freedom scores over time. 
+                            
                             plotOutput("freedom_time"))
                         )
              )
@@ -508,6 +546,8 @@ ui <- fluidPage(
                                        
                                        br(),
                                        
+                                       # GT Table printed for first regression (linear model)
+                                       
                                        tableOutput("regres1"), 
                                         
                                        br(),
@@ -530,13 +570,16 @@ ui <- fluidPage(
                                        br(), 
                                        
                                        h4("Twitter Compliance Predictor:"),
-                                       # Slider input for predictor: 
+                                      
+                                        # Slider input for predictor. Defining minimum and maximum values corresponding
+                                        # with the GDP values in the dataset. 
                                        
                                        helpText("Use the slider above to select a GDP amount (in 2010 US Dollars). Based off
                                                 this linear model, our predictor will return the percentage of requests for content
                                                 removal Twitter will likely comply with. The minimum and maximum GDP values correspond
                                                 to the minimum and maximum GDP amounts in our dataset, for the given time period and 
                                                 countries."),
+                                       
                                        
                                        sliderInput(
                                          inputId = "gdp_size",
@@ -550,6 +593,9 @@ ui <- fluidPage(
                                      ),
                                      
                                      mainPanel(width = 7,
+                                               
+                                               # Creating variables to enable hovering
+                                               
                                        plotOutput("allcountries",
                                                           click = "plot_click",
                                                           hover = "plot_hover"),
@@ -587,6 +633,9 @@ ui <- fluidPage(
                                        
                                        br(),
                                        
+                                       # Print GT table for the second regression (selecting for 18 countries
+                                       # and mapping their relationships w/ GDP)
+                                       
                                        tableOutput("regres2"), 
                                        
                                        br(), 
@@ -595,6 +644,8 @@ ui <- fluidPage(
                                          to a 3.413396e-12% increase in the percentage of requests that Twitter will comply
                                          with, upon receiving from a state This indicates a weak positive relationship 
                                          between the two variables."),
+                                       
+                                       # Checkbox Input to enable size value (Total Requests for Content Removal in that year)
                                        
                                        checkboxInput(
                                          inputId = "total_requests_or_no2",
@@ -605,6 +656,7 @@ ui <- fluidPage(
                                        br(), 
                                        
                                        h4("Twitter Compliance Predictor - Countries where content was withheld:"),
+                                       
                                        # Slider input for predictor: 
                                        
                                        helpText("Use the slider above to select a GDP amount (in 2010 US Dollars). Based off
@@ -627,6 +679,9 @@ ui <- fluidPage(
                                      
                                      mainPanel(
                                        width = 7,
+                                       
+                                       # Plotting the second linear regression
+                                       
                                        plotOutput("bigeighteen",
                                                   click = "plot_click",
                                                   hover = "plot_hover"),
@@ -713,6 +768,9 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   mydata1 <- read_csv("mydata1.csv") %>% 
+    
+    # Defining the levels to plot accurately
+    
     mutate(year = factor(year, levels =
                            c("January - June 2012",
                              "July - December 2012",
@@ -730,9 +788,15 @@ server <- function(input, output) {
                              "July - December 2018",
                              "January - June 2019")))
   
+  # First plot (overall variables mapped over time - all countries). Dark Red
+  # Bar Chart. 
   
   output$visualoverall <- renderPlot({
 
+    # Defining the value of the y-axis, the title, the y axis label and the caption
+    # depending on the variable selected. I use if else multiple times to be able to 
+    # achieve this - was rather taxing. Might want to look for better alternatives but this
+    # did get the job done. 
 
     if(input$overallvars == "accounts_specified") {
       y_value <- mydata1$accounts_specified
@@ -798,10 +862,14 @@ police departments, or other authorized requesters within a country, where some 
       
     }
      
-    
+    # I then use y_value to plot the data, customizing the plot for the variety of
+    # captions, titles and subtitles that I specified depending on the variable selected. 
 
     ggplot(mydata1, aes(year, y_value)) +
       geom_col() +
+      
+      # I use stat summary to help avoid stacking of the cols in geom_col. 
+      
       stat_summary(aes(x = year, y = y_value),
                    fun.y = sum,
                    geom = "col",
@@ -820,11 +888,21 @@ police departments, or other authorized requesters within a country, where some 
       
 })
   
+  # Plotting specific to the country selected (second tab on the Data Visualizations page)
   
   output$countryvisuals <- renderPlot({
+   
+    # I filter for the country selected before creating the plots I require. 
     
     country_filter <-  mydata1 %>% 
       filter(country %in% input$countryid) 
+    
+    # Defining the value of the y-axis, the title, the y axis label and the caption
+    # depending on the variable selected. I use if else multiple times to be able to 
+    # achieve this - was rather taxing. Might want to look for better alternatives but this
+    # did get the job done.
+    
+    # This is very similar to what I did in the previous output code.
     
     if(input$overallvars1 == "accounts_specified") {
       y_value <- country_filter$accounts_specified
@@ -889,11 +967,14 @@ police departments, or other authorized requesters within a country, where some 
       
     }
     
-  
+  # Plotting bar charts for each of the variables mentioned. 
   
     ggplot(country_filter, aes(year, y_value)) +
       geom_col(color = "darkgrey",
                fill = "#69b3a2") +
+      
+      # Using geom_label to label the maximum value of each column. 
+      
       geom_label(aes(label = scales::comma(y_value)),
                  size = 2.5,
                  nudge_y = 0,
@@ -915,16 +996,36 @@ police departments, or other authorized requesters within a country, where some 
   
   output$freedom_time <- renderPlot({
     
+  # reading the joined data. This dataset contains the freedom_scores joined to
+  # the specific country by year, thus allowing me to create the plots I want. This
+  # is specifically important since I wanted to visualize the points with respect to the
+  # number of total requests made as well, which is given to us by the Twitter data. Thus
+  # joining the data (in the clean-fp.rmd) was absolutely important. 
+    
   join_data <-  read_csv("freedom_twitter_gdp.csv")
   
   
   join_data %>% 
+    
+    # Grouping by year, and then using mutate to create the mean freedom score, as well
+    # as finding the total requests made in both halves of the year. This was initially not
+    # possible to find since the data was divided by Jan - Jul and June to Dec, but I renamed 
+    # the halves just by the years in the clean data rmd, and used the year numbers to group 
+    # and calculate the sum. 
+    
     group_by(year) %>% 
     mutate(mean_score = mean(freedom_score)) %>%
     mutate(totalreqyr = sum(total_requests_made)) %>% 
     ungroup() %>%
+    
+    # I filter for the country selected
+    
     filter(country == input$countryfreedom) %>%
     ggplot(aes(year, freedom_score)) +
+    
+    # Creating two different lines/scatter plots - one for the country selected, 
+    # and one that remains constant throughout - the mean scores across each year. 
+    
     geom_line(aes(year, freedom_score),
               color = "grey") +
     geom_point(aes(size = total_requests_made),
@@ -971,7 +1072,9 @@ the specific country's freedom scores. Data from Freedom House.",
     
  twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
  
-# Display Size option
+# Display Size option - this allows us to select for whether or not 
+# we want to visualize the number of total requests made that correspond
+# to the given plot. I do this using if else, as in the previous outputs. 
 
  if(input$total_requests_or_no == TRUE) {
    size_value <- twitter_gdp_model$sum_total_requests_made_yr
@@ -983,6 +1086,10 @@ the specific country's freedom scores. Data from Freedom House.",
    size_value <- NULL
    size_lab <- NULL
  }
+ 
+ # I then proceed to plot the data of the percentage of requests where content was 
+ # withheld against the GDP of that specific country at that point in time. I use 
+ # geom_smooth with method lm to determine the regression line. 
     
  twitter_gdp_model %>%  
    ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = size_value)) +
@@ -1015,7 +1122,11 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
-  # Text for the clicks. 
+  # Text for the clicks. This was honestly just because I felt like my project lacked
+  # cool visuals/fancy options. Clicking on any of the points on the plot states the 
+  # y and x axis at the position where the plot was clicked. I specified the code to produce
+  # exactly what I wanted to see in terms of the variables, replacing 'x' and 'y' as in the 
+  # initial code that I found online. 
   
   output$info <- renderText({
 
@@ -1046,6 +1157,9 @@ the specific country's freedom scores. Data from Freedom House.",
  
   output$regres1 <- renderTable(align = 'c', { 
     
+    
+    # Here, I print the GT table for the first regression that I run. Standard code, and edits. 
+    
     twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
     
     twitter_gdp_model %>%
@@ -1068,15 +1182,24 @@ the specific country's freedom scores. Data from Freedom House.",
     
     twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv")
     
+    # I feed the linear model to the allcountriesmodel object. 
+    
    allcountriesmodel <-  twitter_gdp_model %>% 
       lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) 
     
+   
+   # I then use the predict function by specifying the gdp value to correspond to 
+   # whatever value is selected on the slider input, and also retrieving confidence 
+   # intervals. I then tidy this data using the tidy function, and pull for the fit value. 
+   
    fit <-  predict(allcountriesmodel,
             newdata = tibble(gdp = input$gdp_size), 
             interval = "confidence") %>% 
             tidy() %>% 
             pull(fit) %>% 
      round(3)
+   
+   # As in the previous comment chunk, I now pull for the lower bound of the confidence interval.
    
    lwr <-  predict(allcountriesmodel,
                    newdata = tibble(gdp = input$gdp_size), 
@@ -1085,14 +1208,18 @@ the specific country's freedom scores. Data from Freedom House.",
      pull(lwr) %>% 
      round(3)
    
+   # Pulling for the upper bound of the confidence interval. 
+   
    upr <-  predict(allcountriesmodel,
                    newdata = tibble(gdp = input$gdp_size), 
                    interval = "confidence") %>% 
      tidy() %>% 
      pull(upr) %>% 
      round(3)
-
-   # The 95% prediction interval of the eruption duration for the waiting time of 80 minutes is between 3.1961 and 5.1564 minutes.
+  
+   # Creating the output generated upon changing the GDP on the slider input. This customizes 
+   # the statement to values corresponding with the GDP value on the model.
+   
    paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
           indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
           compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
@@ -1107,7 +1234,15 @@ the specific country's freedom scores. Data from Freedom House.",
   output$bigeighteen <- renderPlot({
 
     twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      
+      # Filtering for countries where some content was withheld (or as I like to call them,
+      # the big 18).
+      
       filter(country %in% big18countries)
+    
+    # Display Size option - this allows us to select for whether or not 
+    # we want to visualize the number of total requests made that correspond
+    # to the given plot. I do this using if else, as in the previous outputs. 
     
     if(input$total_requests_or_no2 == TRUE) {
       size_value <- twitter_gdp_model$sum_total_requests_made_yr
@@ -1120,7 +1255,10 @@ the specific country's freedom scores. Data from Freedom House.",
       size_lab <- NULL
     }
     
-
+    # I then proceed to plot the data of the percentage of requests where content was 
+    # withheld against the GDP of that specific country at that point in time. I use 
+    # geom_smooth with method lm to determine the regression line. 
+    
  twitter_gdp_model %>% 
       ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = size_value)) +
       geom_point(alpha = 0.3,
@@ -1132,7 +1270,7 @@ the specific country's freedom scores. Data from Freedom House.",
       geom_smooth(method = "lm", color = "blue") +
       labs(y = "Percentage of requests where some
       content was withheld",
-           x = "GDP (2010 US Dollars)",
+           x = "Log of GDP (2010 US Dollars)",
            size = "Total Requests Made",
            title = "Percentage of Requests Where Some Content was Withheld 
     against GDP (2010 US Dollars)",
@@ -1161,6 +1299,13 @@ the specific country's freedom scores. Data from Freedom House.",
     
     filtercountrymodel <-  twitter_gdp_model %>% 
       lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) 
+    
+    
+    
+    # I then use the predict function by specifying the gdp value to correspond to 
+    # whatever value is selected on the slider input, and also retrieving confidence 
+    # intervals. I then tidy this data using the tidy function, and pull for the fit value. 
+    # The rest of the code follows as in the previous output code (for the first predictor).
     
     fit <-  predict(filtercountrymodel,
                     newdata = tibble(gdp = input$gdp_size2), 
@@ -1193,7 +1338,8 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
-  
+  # Printing the second regression Gt table. Pretty standard. Just filtered for 
+  # the big 18 here. 
   
   output$regres2 <- renderTable(align = 'c', { 
     
@@ -1213,6 +1359,9 @@ the specific country's freedom scores. Data from Freedom House.",
     
     
   })
+  
+  
+  # Same hover/clicker fancy option to make plot look better. Refer to previous comments. 
   
   output$info2 <- renderText({
     
@@ -1234,12 +1383,16 @@ the specific country's freedom scores. Data from Freedom House.",
 
   })
   
+  # The third linear regression models. Here I change the models by year, thus filtering
+  # for the year selected in the slider input. I also filter for the big 18 countries. 
   
   output$byyear <- renderPlot({
     
     twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
       filter(country %in% big18countries) %>% 
       filter(year == input$model_year)
+    
+    # Plotting the scatter plot and using geom_smooth to plot the linear model. 
     
     twitter_gdp_model %>% 
       ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = sum_total_requests_made_yr)) +
@@ -1252,7 +1405,7 @@ the specific country's freedom scores. Data from Freedom House.",
       geom_smooth(method = "lm", color = "blue") +
       labs(y = "Percentage of requests where some
       content was withheld",
-           x = "GDP (2010 US Dollars)",
+           x = "Log of GDP (2010 US Dollars)",
            size = "Total Requests Made",
            title = "Percentage of Requests Where Some Content was Withheld 
     against GDP (2010 US Dollars)",
@@ -1270,11 +1423,16 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
+  # Printing the third gt (this one is subject to change depending on the year selected by the 
+  # user.)
+  
   output$regres3 <- renderTable(align = 'c', { 
     
     twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
       filter(country %in% big18countries) %>% 
       filter(year == input$model_year)
+    
+    # Standard gt print for regression. 
     
     twitter_gdp_model %>%
       lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
@@ -1287,6 +1445,8 @@ the specific country's freedom scores. Data from Freedom House.",
                  conf.high = "Upper Bound")
     
   })
+  
+  # Fancy click stuff. 
   
   output$info3 <- renderText({
     
@@ -1308,6 +1468,10 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
+  # Here I print the interpretation of the results put forth by the plot and the gt
+  # both. I pull for the estimate term, which is of relevance to this passage, since I 
+  # seek to explain what a $1 rise in the GDP is going to look like in terms of the 
+  # percentage of requests where some content will be withheld. 
   
   output$explaingt <- renderText({
     
