@@ -636,7 +636,7 @@ ui <- fluidPage(
                                        br(), 
                                        
                                        helpText("Twitter has withheld content in the following 18 countries in response to legal
-                                       demands: Argentina,Australia, Belgium, Brazil, Canada, France, Germany, India, Ireland, Israel, Japan, 
+                                       demands: Argentina, Australia, Belgium, Brazil, Canada, France, Germany, India, Ireland, Israel, Japan, 
                                        Netherlands, New Zealand, Russia, South Korea, Spain, Turkey, and the United Kingdom."), 
                                        br(),
                                        h5("Predictor Results:"),
@@ -667,7 +667,7 @@ ui <- fluidPage(
                                          label = "Select year:",
                                          min = 2012,
                                          max = 2018,  
-                                         value = 2016,
+                                         value = 2017,
                                          ticks = TRUE,
                                          sep = ""),
                                        
@@ -1095,7 +1095,9 @@ the specific country's freedom scores. Data from Freedom House.",
    # The 95% prediction interval of the eruption duration for the waiting time of 80 minutes is between 3.1961 and 5.1564 minutes.
    paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
           indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
-          compliance with your requests is between ", lwr, "% and ", upr, "%.") 
+          compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
+          there are likely other factors involved in determining the number of requests where some content is withheld.
+          This relationship does not prove causation.") 
 
    
   })
@@ -1184,7 +1186,9 @@ the specific country's freedom scores. Data from Freedom House.",
     # The 95% prediction interval of the eruption duration for the waiting time of 80 minutes is between 3.1961 and 5.1564 minutes.
     paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
           indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
-          compliance with your requests is between ", lwr, "% and ", upr, "%.") 
+          compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
+          there are likely other factors involved in determining the number of requests where some content is withheld.
+          This relationship does not prove causation.") 
     
     
   })
@@ -1242,7 +1246,7 @@ the specific country's freedom scores. Data from Freedom House.",
       geom_point(alpha = 0.6,
                  shape = 21,
                  color = "black",
-                 fill = "dimgrey") +
+                 fill = "darkgreen") +
       theme_minimal() +
       scale_x_log10() +
       geom_smooth(method = "lm", color = "blue") +
