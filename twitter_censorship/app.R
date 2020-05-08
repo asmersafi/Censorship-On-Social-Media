@@ -248,6 +248,14 @@ big18countries <- c("Argentina",
            "Turkey",
            "United Kingdom")
 
+regionsfreedom <- c("Asia",			
+"Americas",				
+"Europe",				
+"Eurasia",				
+"MENA",				
+"SSA")
+
+
 # UI setup
 
 ui <- fluidPage(
@@ -605,7 +613,7 @@ ui <- fluidPage(
                                                br(), 
                                        br(),
                                        h5("Predictor Results:"),
-                                               textOutput("allcountriespredictor"))
+                                               verbatimTextOutput("allcountriespredictor"))
                                      
                                      
                                    )
@@ -695,7 +703,7 @@ ui <- fluidPage(
                                        Netherlands, New Zealand, Russia, South Korea, Spain, Turkey, and the United Kingdom."), 
                                        br(),
                                        h5("Predictor Results:"),
-                                       textOutput("big18predictor"))
+                                       verbatimTextOutput("big18predictor"))
             
                                        
                                      )
@@ -754,7 +762,46 @@ ui <- fluidPage(
                         
                         )),
              
-               tabPanel("Freedom Scores and Number of Requests Made")
+               tabPanel("Freedom Scores and Number of Requests Made",
+                        sidebarLayout(
+                          sidebarPanel(
+                            h4("Regression Results:"),
+                            helpText("In this section, we investigate the effect of
+                                     a country's level of freedom (a measure of how 
+                                     authoritarian its government is) on the number of 
+                                     requests it makes for Twitter content removal."),
+                            tableOutput("regres4"),
+                            helpText("From our results, it can be interpreted that a 1 point increase in the freedom score of a country leads
+                                     to a 3.54 decrease of requests in the total content removal requests made by the state (a country that is more free will request for
+                                     less content to be removed). This indicates a weak negative relationship between the two variables. Note that this is only a correlation, and that there may be several
+                                     other variables involved in determining the number of requests made (legal notices, context specifities, hate speech,
+                                     religious reasons etc.)"), 
+                            helpText("However, upon further investigation, I found that there exist great regional disparities in the effect of 
+                                     how free a country is on the total requests its government makes. Pick a region to visualize."),
+                            pickerInput(inputId = "regionpicker",
+                                        label = "Choose Region:",
+                                        choices = regionsfreedom,
+                                        multiple = FALSE
+                                        
+                            ),
+                            tableOutput("regres5"),
+                            textOutput("finaltext")
+                            
+                            
+                          ),
+                          
+                          mainPanel(
+                            plotOutput("freedomoverall",
+                                       click = "plot_click"),
+                            verbatimTextOutput("info4"),
+                            br(),
+                            plotOutput("regionfreedom",
+                                       click = "plot_click1"),
+                            verbatimTextOutput("info5")
+                                    
+                                    )
+                          
+                        ))
       
               
                
@@ -1221,10 +1268,10 @@ the specific country's freedom scores. Data from Freedom House.",
    # the statement to values corresponding with the GDP value on the model.
    
    paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
-          indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
-          compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
-          there are likely other factors involved in determining the number of requests where some content is withheld.
-          This relationship does not prove causation.") 
+indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
+compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
+there are likely other factors involved in determining the number of requests where some content is withheld.
+This relationship does not prove causation.") 
 
    
   })
@@ -1330,10 +1377,10 @@ the specific country's freedom scores. Data from Freedom House.",
     
     # The 95% prediction interval of the eruption duration for the waiting time of 80 minutes is between 3.1961 and 5.1564 minutes.
     paste0("According to this linear regression model, the GDP amount (in US Dollars) that you selected
-          indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
-          compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
-          there are likely other factors involved in determining the number of requests where some content is withheld.
-          This relationship does not prove causation.") 
+indicates that Twitter is likely to comply with ", fit, "% of your requests. The 95% prediction interval of Twitter's 
+compliance with your requests is between ", lwr, "% and ", upr, "%."," Note that this is only a correlation, since
+there are likely other factors involved in determining the number of requests where some content is withheld.
+This relationship does not prove causation.") 
     
     
   })
@@ -1494,6 +1541,170 @@ the specific country's freedom scores. Data from Freedom House.",
     
   })
   
+  
+  output$freedomoverall <- renderPlot({
+    
+    # reading freedom score and twitter joined data. 
+    
+     freedom <- read_csv("freedom_twitter copy.csv")
+     
+     # plotting freedom score against the sum of total requests made per year
+     # by each country. 
+     
+     freedom %>% 
+       ungroup() %>% 
+       ggplot(aes(freedom_score, sum_total_requests_made_yr)) +
+       scale_y_log10() +
+       geom_point(alpha = 0.6,
+                  shape = 21,
+                  color = "black",
+                  fill = "gold") +
+       geom_smooth(method = "lm") + 
+       theme_classic() +
+       labs(y = "Total Requests Made",
+            x = "Freedom Score",
+            size = "Total Requests Made",
+            title = "Effect of Country Freedom Score on Total Requests Made",
+            subtitle = "For the years 2013-2019", 
+            caption = "Data from Freedom House.") +
+       theme(plot.title = element_text(face = "bold",
+                                       size = 15,
+                                       hjust = 0.5),
+             plot.subtitle = element_text(face = "italic",
+                                          size = 10,
+                                          hjust = 0.5))
+     
+     
+    
+  })
+  
+  
+  # Printing GT for regression 4. 
+  
+  output$regres4 <- renderTable({
+    
+    freedom <- read_csv("freedom_twitter copy.csv")
+    
+    freedom %>%
+      lm(sum_total_requests_made_yr ~ freedom_score, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) 
+    
+    
+  })
+  
+  output$info4 <- renderText({
+    
+    xy_str <- function(e) {
+      if(is.null(e)) return("-\n")
+      paste0("Freedom Score = ", round(e$x, 1),"\n", "Total Requests Made = ", round(e$y, 1), "\n")
+    }
+    xy_range_str <- function(e) {
+      if(is.null(e)) return("NULL\n")
+      paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1),
+             " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+    }
+    
+    paste0("Click on the points on the plot for specific values:",
+           "\n",
+           "Results: ", xy_str(input$plot_click)
+           
+    )
+    
+  })
+  
+  
+  output$regionfreedom <- renderPlot({
+    
+    freedom <- read_csv("freedom_twitter copy.csv")
+    
+    
+    freedom %>% 
+      filter(region == input$regionpicker) %>% 
+      ggplot(aes(freedom_score, sum_total_requests_made_yr, fill = input$region)) +
+      scale_y_log10() +
+      geom_point(alpha = 0.6,
+                 shape = 25,
+                 color = "black",
+                 fill = "red") +
+      geom_smooth(method = "lm") + 
+      theme_classic() +
+      labs(y = "Total Requests Made",
+           x = "Freedom Score",
+           title = "Effect of Country Freedom Score on Total Requests Made - Region Specific",
+           subtitle = print(input$regionpicker), "For the years 2013-2019", 
+           caption = "Data from Freedom House.") +
+      theme(plot.title = element_text(face = "bold",
+                                      size = 15,
+                                      hjust = 0.5),
+            plot.subtitle = element_text(face = "italic",
+                                         size = 14,
+                                         hjust = 0.5))
+    
+    
+    
+  })
+  
+  
+  output$info5 <- renderText({
+    
+    xy_str <- function(e) {
+      if(is.null(e)) return("-\n")
+      paste0("Freedom Score = ", round(e$x, 1),"\n", "Total Requests Made = ", round(e$y, 1), "\n")
+    }
+    xy_range_str <- function(e) {
+      if(is.null(e)) return("NULL\n")
+      paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1),
+             " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+    }
+    
+    paste0("Click on the points on the plot for specific values:",
+           "\n",
+           "Results: ", xy_str(input$plot_click1)
+           
+    )
+    
+  })
+  
+  
+  output$regres5 <- renderTable({
+    
+    freedom <- read_csv("freedom_twitter copy.csv")
+    
+    freedom %>%
+      filter(region == input$regionpicker) %>% 
+      lm(sum_total_requests_made_yr ~ freedom_score, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) 
+    
+    
+  })
+  
+  
+  output$finaltext <- renderText({
+    
+    
+    freedom <- read_csv("freedom_twitter copy.csv") %>% 
+    filter(region == input$regionpicker) 
+    
+     estimate <-
+      freedom %>%
+      lm(sum_total_requests_made_yr ~ freedom_score, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) %>%  
+      select(estimate) %>% 
+      tail(1) %>% 
+      pull(estimate) %>% 
+      round(3)
+
+    
+    paste0("From our results, it can be interpreted that in the region ", print(input$regionpicker), " a 1 point
+  increase in the freedom score of a country leads to a ", estimate, " increase in the total number of requests that
+  country's government will make. Note that this is only a correlation, and that there may be several other region,
+           country, or context specific factors at play that determine the number of requests made.")
+    
+    
+  })
   
 }
 
