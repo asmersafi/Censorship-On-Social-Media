@@ -648,12 +648,12 @@ ui <- fluidPage(
                           
                           tabPanel("By year:",
                                    sidebarLayout(
-                                     sidebarPanel(
-                                       width = 5,
+                                     sidebarPanel(width = 5,
+                                       
                                        
                                        br(), 
                                        
-                                       h4("Regression Results"), 
+                                       h4("Regression Results:"), 
                                        
                                        helpText("In this section, we investigate the effect of a country's 
                                          GDP (indicative of a country's wealth, economic power) on whether or 
@@ -683,7 +683,7 @@ ui <- fluidPage(
                                        
                                      ),
                                      
-                                     mainPanel(width = 5,
+                                     mainPanel(width = 7,
                                        plotOutput("byyear",
                                                   click = "plot_click"),
                                        
@@ -1227,14 +1227,104 @@ the specific country's freedom scores. Data from Freedom House.",
            "Results: ", xy_str(input$plot_click)
            
     )
+
+  })
+  
+  
+  output$byyear <- renderPlot({
     
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries) %>% 
+      filter(year == input$model_year)
+    
+    twitter_gdp_model %>% 
+      ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = sum_total_requests_made_yr)) +
+      geom_point(alpha = 0.6,
+                 shape = 21,
+                 color = "black",
+                 fill = "dimgrey") +
+      theme_minimal() +
+      scale_x_log10() +
+      geom_smooth(method = "lm", color = "blue") +
+      labs(y = "Percentage of requests where some
+      content was withheld",
+           x = "GDP (2010 US Dollars)",
+           size = "Total Requests Made",
+           title = "Percentage of Requests Where Some Content was Withheld 
+    against GDP (2010 US Dollars)",
+           subtitle = print(input$model_year)) +
+      
+      theme(plot.title = element_text(face = "bold",
+                                      size = 15,
+                                      hjust = 0.5),
+            plot.subtitle = element_text(face = "italic",
+                                         size = 10,
+                                         hjust = 0.5))
     
     
     
     
   })
   
+  output$regres3 <- renderTable(align = 'c', { 
+    
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries) %>% 
+      filter(year == input$model_year)
+    
+    twitter_gdp_model %>%
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) %>%
+      gt() %>% 
+      cols_label(term = "Term",
+                 estimate = "Estimate",
+                 conf.low = "Lower Bound",
+                 conf.high = "Upper Bound")
+    
+  })
   
+  output$info3 <- renderText({
+    
+    xy_str <- function(e) {
+      if(is.null(e)) return("-\n")
+      paste0("GDP (2010 US Dollars) = $", round(e$x, 1),"\n", "Percentage Requests where content withheld = ", round(e$y, 1), "%", "\n")
+    }
+    xy_range_str <- function(e) {
+      if(is.null(e)) return("NULL\n")
+      paste0("xmin=", round(e$xmin, 1), " xmax=", round(e$xmax, 1),
+             " ymin=", round(e$ymin, 1), " ymax=", round(e$ymax, 1))
+    }
+    
+    paste0("Click on the points on the plot for specific values:",
+           "\n",
+           "Results: ", xy_str(input$plot_click)
+           
+    )
+    
+  })
+  
+  
+  output$explaingt <- renderText({
+    
+    twitter_gdp_model <- read_csv("twitter_gdp_modeling.csv") %>% 
+      filter(country %in% big18countries) %>% 
+      filter(year == input$model_year)
+    
+  estimate <-
+    twitter_gdp_model %>% 
+      lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
+      tidy(conf.int = TRUE) %>% 
+      select(term, estimate, conf.low, conf.high) %>%  
+      select(estimate) %>% 
+      tail(1) %>% 
+      pull(estimate)
+  
+  paste0("From our results, it can be interpreted that in the year ", print(input$model_year), " a $1
+  increase in the GDP of a country leads to a ", estimate, "% increase in the percentage of requests that
+  Twitter will comply with, upon receiving from a state.")
+    
+  })
   
   
 }
