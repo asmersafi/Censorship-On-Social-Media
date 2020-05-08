@@ -1,0 +1,260 @@
+---
+title: "Clean-For-Model"
+author: "Asmer Asrar Safi"
+date: "5/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(fivethirtyeight)
+library(tidyverse)
+library(viridis)
+library(transformr)
+library(RColorBrewer)
+library(readxl)
+library(naniar)
+library(dplyr)
+library(readr)
+library(markdown)
+library(patchwork)
+library(purrr)
+library(stringr)
+library(ggthemes)
+library(tibble)
+library(gganimate)
+library(janitor)
+library(skimr)
+library(gt)
+library(forcats)
+library(jsonlite)
+library(broom)
+library(hrbrthemes)
+
+
+```
+
+
+
+
+
+# Error sources. Analyze (Less time period, only 18 countries, 2019 differences - India)
+
+# 2019 data unavailable. 2012 - 2018 only. 
+
+
+# twitter does not give us actual numbers of how many tweets and accounts were withheld 
+# in every single request. thus only standardized variable we can use is percentage of requests 
+# where some content was withheld on y - axis. 
+
+#### This is my sample document. Here I test out my regressions before transferring them to the app. 
+
+
+```{r}
+
+# Cleaning Data for Modeling between GDP and the percentage where requests were withheld. Per year. 
+
+# Reading the data 
+
+twitter_gdp <- read_csv("twitter_gdp.csv")
+
+
+twitter_gdp <- twitter_gdp %>% 
+  
+  # Creating the requests where some content was withheld variable by using the total_requests_made 
+  # and percentage_where_some_conetent_withheld variables. Essentially, I want to change the percentage
+  # to actual numbers. This will be crucial to find the total number of requests in each half (and then)
+  # summing them to find what percentage of requests were complied to in the whole year.
+  
+  mutate(requests_where_content_withheld = (percentage_where_some_content_withheld*total_requests_made)/100) %>% 
+  
+  # Here I try to add the data to combine the different values of each half of the year
+  # For example, I want to add the total requests where content was withheld in Jan-Jun 2016,
+  # and Jul-Dec 2016 to find the total number of requests for the entire year. 
+  
+  group_by(year, country) %>% 
+  
+  mutate(sum_requests_where_content_withheld_yr = sum(requests_where_content_withheld)) %>% 
+  
+  mutate(sum_total_requests_made_yr = sum(total_requests_made)) %>% 
+  
+  ungroup() %>% 
+  
+  # Creating the percentage where some content withheld variable for each year 
+  # based on the previous calculation. Now I'm done. 
+  
+  mutate(sum_percentage_where_content_withheld_yr = (sum_requests_where_content_withheld_yr/sum_total_requests_made_yr)*100) %>% 
+  
+  # Replacing NaN values with 0. 
+  
+  mutate(sum_percentage_where_content_withheld_yr = replace_na(sum_percentage_where_content_withheld_yr, 0)) %>% 
+  
+  # Rounding to 2 decimal places. 
+  
+  mutate(sum_percentage_where_content_withheld_yr = round(sum_percentage_where_content_withheld_yr, digits = 2)) %>% 
+  
+  select(country, year, sum_percentage_where_content_withheld_yr, gdp, sum_total_requests_made_yr) %>% 
+  
+  # Removing Venezuela. GDP data was unavailable.
+  
+  filter(!country == "Venezuela") %>% 
+  mutate(year = as.double(year))
+  
+  
+# Writing csv for app usage. 
+
+
+write_csv(twitter_gdp, "twitter_gdp_modeling.csv")
+```
+
+
+```{r}
+
+# Overall Country Plot + linear model. Code mostly the same as in the app. 
+# Refer to app for more detailed comments on the plots/models. These are just
+# rough tests. 
+
+allcountries <- twitter_gdp %>%  
+  
+  ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = sum_total_requests_made_yr)) +
+  
+  geom_point(alpha = 0.3,
+            shape=21,
+            color="black",
+            fill="#69b3a2") +
+  
+  scale_x_log10() +
+  
+  geom_smooth(method = "lm", color = "dimgrey") +
+  
+  theme_minimal()
+
+
+allcountries
+
+
+  
+
+allcountriesmodel <- 
+  twitter_gdp %>%
+  lm(sum_percentage_where_content_withheld_yr ~ gdp, data = .) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(Variable = term,
+               Estimate = estimate,
+               `Lower Bound` = conf.low,
+               `Upper Bound` = conf.high)
+
+
+
+allcountriesmodel
+
+
+```
+
+
+```{r}
+
+# only those countries where at some point content was withheld (big 18)
+# Code mostly the same as in the app. 
+# Refer to app for more detailed comments on the plots/models. These are just
+# rough tests. 
+
+  
+big18 <- twitter_gdp %>%  
+  
+  filter(country %in% c("Argentina",
+                        "Australia",
+                        "Belgium",
+                        "Brazil",
+                        "Canada",
+                        "France",
+                        "Germany",
+                        "India",
+                        "Ireland",
+                        "Israel",
+                        "Japan",
+                        "Netherlands",
+                        "New Zealand",
+                        "Russia",
+                        "South Korea",
+                        "Spain",
+                        "Turkey",
+                        "United Kingdom")) 
+
+```
+
+
+```{r}
+
+# big 18 and by year. Nothing's changed from the previous code except 
+# from the fact that I also filter for the year. Pretty much the same. 
+
+
+big18yr <- twitter_gdp %>%  
+  
+  filter(year == 2014) %>% 
+  
+  filter(country %in% c("Argentina",
+                        "Australia",
+                        "Belgium",
+                        "Brazil",
+                        "Canada",
+                        "France",
+                        "Germany",
+                        "India",
+                        "Ireland",
+                        "Israel",
+                        "Japan",
+                        "Netherlands",
+                        "New Zealand",
+                        "Russia",
+                        "South Korea",
+                        "Spain",
+                        "Turkey",
+                        "United Kingdom")) %>%
+  
+  mutate(sum_percentage_where_content_withheld_yr = round(sum_percentage_where_content_withheld_yr, digits = 2)) %>% 
+  
+  ggplot(aes(gdp, sum_percentage_where_content_withheld_yr, size = sum_total_requests_made_yr)) +
+  
+   
+  geom_point(alpha = 0.3,
+            shape=21,
+            color="black",
+            fill="#69b3a2") +
+  
+  theme_minimal() +
+  
+  geom_smooth(method = "lm", color = "darkblue", se = FALSE) 
+
+
+big18yr
+```
+
+
+
+
+```{r}
+
+# Wrangling the Freedom + Twitter + GDP combined CSV i
+
+freedom <- read_csv("freedom_twitter_gdp.csv")
+
+# Creating the same variables in this data as in the previous one. Using an
+# older version that I cleaned without the variables i needed, so thought 
+# I'd just add them to this data set as opposed to cleaning the entire thing
+# all over again, and writing a new csv. 
+
+freedom <- freedom %>% 
+  group_by(year, country) %>%
+  mutate(sum_total_requests_made_yr = sum(total_requests_made)) %>% 
+  mutate(sum_accounts_specified_yr = sum(accounts_specified)) %>% 
+  select(country, region, year, sum_total_requests_made_yr, total_requests_made, freedom_score, sum_accounts_specified_yr)
+
+write_csv(freedom, "freedom_twitter.csv")
+
+```
+
+

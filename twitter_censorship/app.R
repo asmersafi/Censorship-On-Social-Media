@@ -381,7 +381,11 @@ ui <- fluidPage(
                              tabPanel("Reports based on Local Laws",
                                       h5("From Twitter:"),
                                       paste(local_laws1))
-                           )
+                           ),
+                           
+                           imageOutput("pic",
+                                       width = "100%",
+                                       height = "100%")
                         )
     )),
     
@@ -763,6 +767,8 @@ ui <- fluidPage(
                         )),
              
                tabPanel("Freedom Scores and Number of Requests Made",
+                        
+                   
                         sidebarLayout(
                           sidebarPanel(
                             h4("Regression Results:"),
@@ -801,12 +807,59 @@ ui <- fluidPage(
                                     
                                     )
                           
+                        
                         ))
-      
-              
                
-               
-             ))
+             )),
+    
+    tabPanel("Conclusion",
+             
+             h4("Limitations:"),
+             
+             helpText("There are several limitations to the project that I wish to acknowledge.
+                      The first among these is the lack of data consistent with the time period I
+                      sought to investigate in terms of Twitter's activity and content removal. While
+                      this was available for the years 2012 to 2019, the Freedom House data was only 
+                      available for the years 2013-2019, whereas the GDP data from World Bank only 
+                      consisted of the years 2012-2018. Similarly, the Twitter data too ended after the
+                      first half of 2019, which made it impossible for me to particularly zoom in on 
+                      India's activity with Twitter following the lockdown in Kashmir that began in August 2019."),
+             
+             
+             helpText("Twitter also does not provide us with insights on how many tweets and accounts were 
+                      specified as part of every request. This means that the only standardized variable we 
+                      have access to in order to investigate the proportion and nature of the content withheld
+                      is the percentage of total requests where some content was withheld. This doesn't give us
+                      details about the proportion of tweets or accounts withheld in each request."),
+             
+             helpText("Overall, there is only a relatively small time period for which transparency data is available. At
+                      the same time, Twitter has only withheld content for 18 countries. This means that there is a 
+                      general lack of overall data to establish trends representative of Twitter's response, and the reasons
+                      why governments lodge content removal requests."),
+             
+             h4("Findings:"),
+             
+             helpText("My project concludes, that overall, there is a rather weak positive relationship between a 
+                      country's GDP and the percentage of requests that Twitter may be willing to comply with. Note
+                      that this is merely a correlation, and that there are surely other factors at play that determine
+                      Twitter's responses. From my findings alone, however, keeping all other factors constant, it can 
+                      be assumed that the greater a country's economic power/wealth, the more requests it will have Twitter
+                      comply with."),
+             
+             helpText("Simultaneously, my findings also conclude that there exists a weak negative relationship between
+                      a country's level of freedom and the total number of requests it makes for content removal on Twitter.
+                      Note that this too is merely a correlation, and that there are surely other factors at play that determine
+                      Twitter's responses. From my findings alone, however, keeping all other factors constant, it can 
+                      be assumed that the greater a country's regard for human rights, civil liberties, and the like, the less 
+                      requests it will make for content removal. Note that there are great regional disparities in this relationship,
+                      testifying to the fact that more factors are indeed influencing countries' decision to lodge requests."),
+             
+             br(), 
+             
+             helpText("I would love to have your feedback on this project. Please email me at asmersafi@college.harvard.edu.")
+             
+             
+             )
     
     
     ))
@@ -1705,6 +1758,9 @@ This relationship does not prove causation.")
     
     
   })
+  
+ 
+  
   
 }
 
